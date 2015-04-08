@@ -193,7 +193,6 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		mainPathPlanner = fwMap;
 		
-		
 		itemStatistics = new HashMap<UnrealId, ItemStatistic>();
 		
 		itemTypeStatistics = new HashMap<UT2004ItemType, ItemTypeStatistic>();
@@ -205,13 +204,11 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		ititWeaponPreferences();
 		
-		
-		
 		initializeModules();
 		
 		enemies = new HashMap<UnrealId, EnemyInfo>();
 		
-		startName = info.getName();
+		
 	
         // By uncommenting following line, you can make the bot to do the file logging of all its components
         //bot.getLogger().addDefaultFileHandler(new File("EmptyBot.log"));
@@ -242,7 +239,7 @@ public class CTFChampion extends UT2004BotTCController {
      */
     @Override
     public void botInitialized(GameInfo gameInfo, ConfigChange currentConfig, InitedMessage init) {
-		log.info("botInitialized started"); 
+		log.info("botInitialized start"); 
 		
 		CTFChampion.logStatic = log;
 		
@@ -257,6 +254,8 @@ public class CTFChampion extends UT2004BotTCController {
 				addEnemy(player.getId());
 			}
 		}
+		
+		log.info("botInitialized end"); 
     }
 
     /**
@@ -270,6 +269,7 @@ public class CTFChampion extends UT2004BotTCController {
      */
     @Override
     public void botFirstSpawn(GameInfo gameInfo, ConfigChange config, InitedMessage init, Self self) {
+		log.info("botFirstSpawn start"); 
         // Display a welcome message in the game engine
         // right in the time when the bot appears in the environment, i.e., his body has just been spawned 
         // into the UT2004 for the first time.    	
@@ -288,7 +288,10 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		informationBase.addPlayersAlreadyInGame();
 		informationBase.addSelf();
-
+		
+		startName = info.getName();
+		
+		log.info("botFirstSpawn end"); 
     }
     
     /**
@@ -559,7 +562,8 @@ public class CTFChampion extends UT2004BotTCController {
 	 * Initialize bot modules
 	 */
 	private void initializeModules() {
-		informationBase = new InformationBase(this, log, players, ctf, mainPathPlanner, info, fwMap, navigation);
+		informationBase = new InformationBase(this, log, players, ctf, mainPathPlanner, info, fwMap, navigation, shoot,
+			weaponPrefs);
 		
 		comunicationModule = new ComunicationModule(this, log, tcClient, informationBase);
 		

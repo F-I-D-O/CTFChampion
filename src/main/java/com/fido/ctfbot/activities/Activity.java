@@ -17,6 +17,7 @@
 package com.fido.ctfbot.activities;
 
 import com.fido.ctfbot.InformationBase;
+import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 
 /**
  *
@@ -24,12 +25,15 @@ import com.fido.ctfbot.InformationBase;
  */
 public abstract class Activity {
 	
-	private final InformationBase informationBase;
+	protected final InformationBase informationBase;
+	
+	protected final LogCategory log;
 
 	
 	
-	public Activity(InformationBase informationBase) {
+	public Activity(InformationBase informationBase, LogCategory log) {
 		this.informationBase = informationBase;
+		this.log = log;
 	}
 	
 	

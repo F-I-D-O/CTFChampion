@@ -49,7 +49,7 @@ public class AgentRunner {
 //        ).setMain(true);          // tells runner that is is executed inside MAIN method, thus it may block the thread and watch whether agent/s are correctly executed
 //		br.startAgents(3).;          // tells the runner to start 1 agent
 		
-		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost("localhost").setPort(3000).setLogLevel(Level.INFO).startAgents(
+		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost("localhost").setPort(3000).setLogLevel(Level.WARNING).startAgents(
                 new UT2004BotParameters().setTeam(2),
                 new UT2004BotParameters().setTeam(2),
 				new UT2004BotParameters().setTeam(2)

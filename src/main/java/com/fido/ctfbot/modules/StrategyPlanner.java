@@ -43,7 +43,7 @@ public class StrategyPlanner extends CTFChampionModule{
 	
 	private final IPathPlanner mainPathPlanner;
 	
-	private final CTF ctfInfo;
+	private final CTF ctf;
 	
 	
 	private Strategy currentStrategy;
@@ -57,15 +57,13 @@ public class StrategyPlanner extends CTFChampionModule{
 		super(bot, log, informationBase);
 		this.comunicationModule = comunicationModule;
 		this.mainPathPlanner = mainPathPlanner;
-		this.ctfInfo = informationBase.getCtf();
+		this.ctf = informationBase.getCtf();
 	}
 	
 	public void makeStrategy(){
-		
-		
-		
+		log.log(Level.INFO, "Start making strategy: [applyStrategy()]");
 		Strategy nextStrategy;
-		if(informationBase.getCtf().isOurFlagHome()){
+		if(ctf.isOurFlagHome()){
 			nextStrategy = Strategy.STEAL_ENEMY_FLAG;
 		}
 		else{
@@ -89,6 +87,7 @@ public class StrategyPlanner extends CTFChampionModule{
 //		if(bot.testHeatup.isCool()){
 //			comunicationModule.sendCommand();
 //		}
+		log.log(Level.INFO, "End making strategy: [applyStrategy()]");
 	}
 
 	private boolean applyStrategy(Strategy nextStrategy) {
@@ -110,12 +109,12 @@ public class StrategyPlanner extends CTFChampionModule{
 	private boolean steelEnemyFlag() {
 		HashMap<UnrealId,FriendInfo> friendsTmp = getCopyFriendInfo();
 		FriendInfo  nearestFriendToOurBae = informationBase.getFriends().get(
-				informationBase.getNearestFriendTo(ctfInfo.getOurBase().getLocation()));
+				informationBase.getNearestFriendTo(ctf.getOurBase().getLocation()));
 		boolean commandIssued = issueCommand(nearestFriendToOurBae, Goal.GUARD_OUR_FLAG);
 		if(commandIssued){
 			friendsTmp.remove(nearestFriendToOurBae.getId());
 			FriendInfo  nearestFriendToEnemyBase = informationBase.getFriends().get(
-				informationBase.getNearestFriendTo(ctfInfo.getEnemyBase().getLocation(), friendsTmp));
+				informationBase.getNearestFriendTo(ctf.getEnemyBase().getLocation(), friendsTmp));
 			commandIssued = issueCommand(nearestFriendToEnemyBase, Goal.GET_ENEMY_FLAG);
 			if(commandIssued){
 				friendsTmp.remove(nearestFriendToEnemyBase.getId());

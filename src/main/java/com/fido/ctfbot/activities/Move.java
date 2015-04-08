@@ -18,45 +18,46 @@ package com.fido.ctfbot.activities;
 
 import com.fido.ctfbot.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
-import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
-import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
-import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import java.util.logging.Level;
 
 /**
  *
  * @author Fido
  */
-public class FightEnemy extends Activity {
+public class Move extends Activity {
 
-	private final Players players;
+	private Location target;
 	
 	private final IUT2004Navigation navigation;
-	
-	private final ImprovedShooting shoot;
-	
-	private final WeaponPrefs weaponPrefs;
+
 	
 	
-	public FightEnemy(InformationBase informationBase, LogCategory log) {
+	public void setTarget(Location target) {
+		this.target = target;
+	}
+
+	
+	
+	
+	public Move(InformationBase informationBase, LogCategory log) {
 		super(informationBase, log);
-		players = informationBase.getPlayers();
-		navigation = informationBase.getNavigation();
-		shoot = informationBase.getShoot();
-		weaponPrefs = informationBase.getWeaponPrefs();
+		this.navigation = informationBase.getNavigation();
 	}
 
 	@Override
 	public void start() {
-		if(players.canSeeEnemies()){
-			Player chosenEmemy = players.getNearestVisibleEnemy();
-			if(chosenEmemy != null){
-				navigation.setFocus(chosenEmemy);
-				navigation.navigate(chosenEmemy);
-				shoot.shoot(weaponPrefs, chosenEmemy);
-			}
+		if(target == null){
+			log.log(Level.INFO, "Cannot navigate to null target [Move.start()]");
 		}
+		
+		// navigovate only if we don't navigating, or we navigating to different target
+		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(target)){
+			navigation.navigate(target);
+		}
+		
+		
 	}
 	
 }

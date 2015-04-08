@@ -25,8 +25,10 @@ import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
+import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -53,10 +55,14 @@ public class InformationBase {
 	
 	private final IUT2004Navigation navigation;
 	
+	private final ImprovedShooting shoot;
+	
 	
 	private final HashMap<UnrealId, FriendInfo> friends;
 	
 	private final IPathPlanner mainPathPlanner;
+	
+	private final WeaponPrefs weaponPrefs;
 	
 	
 	
@@ -78,6 +84,16 @@ public class InformationBase {
 	public IUT2004Navigation getNavigation() {
 		return navigation;
 	}
+
+	public ImprovedShooting getShoot() {
+		return shoot;
+	}
+
+	public WeaponPrefs getWeaponPrefs() {
+		return weaponPrefs;
+	}
+	
+	
 	
 	
 	
@@ -91,7 +107,8 @@ public class InformationBase {
 	
 	
 	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctfInfo, IPathPlanner mainPathPlanner,
-			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation) {
+			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, 
+			WeaponPrefs weaponPrefs) {
 		this.log = log;
 		this.bot = bot;
 		this.players = players;
@@ -99,6 +116,8 @@ public class InformationBase {
 		this.info = info;
 		this.fwMap = fwMap;
 		this.navigation = navigation;
+		this.shoot = shoot;
+		this.weaponPrefs = weaponPrefs;
 		
 		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();

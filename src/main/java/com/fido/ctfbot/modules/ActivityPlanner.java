@@ -157,7 +157,7 @@ public class ActivityPlanner extends CTFChampionModule{
 
 	private void guardBase() {
 		if(players.canSeeEnemies()){
-			runActivity(new FightEnemy(informationBase));
+			runActivity(new FightEnemy(informationBase, log));
 		}
 		else{
 			
