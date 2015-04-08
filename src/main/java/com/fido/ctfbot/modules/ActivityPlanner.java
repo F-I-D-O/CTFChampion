@@ -16,8 +16,8 @@
  */
 package com.fido.ctfbot.modules;
 
-import activities.Activity;
-import activities.FightEnemy;
+import com.fido.ctfbot.activities.Activity;
+import com.fido.ctfbot.activities.FightEnemy;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
