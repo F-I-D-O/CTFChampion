@@ -1,6 +1,7 @@
 package com.fido.ctfbot;
 
 
+import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import com.fido.ctfbot.modules.ComunicationModule;
 import com.fido.ctfbot.modules.ActivityPlanner;
@@ -354,6 +355,8 @@ public class CTFChampion extends UT2004BotTCController {
 			log.log(Level.INFO, "Logic invoked after: {0} ms", currTime - lastLogicTime);
 		}
         lastLogicTime = currTime;
+        
+//        info.getT
 		
 //		decreaseRespawnTimes();
 //		calculateWeaponsPriority();

@@ -16,7 +16,7 @@
  */
 package com.fido.ctfbot.activities;
 
-import com.fido.ctfbot.InformationBase;
+import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
@@ -34,22 +34,18 @@ public class Move extends Activity {
 
 	
 	
-	public void setTarget(Location target) {
-		this.target = target;
-	}
-
 	
-	
-	
-	public Move(InformationBase informationBase, LogCategory log) {
+	public Move(InformationBase informationBase, LogCategory log, Location target) {
 		super(informationBase, log);
 		this.navigation = informationBase.getNavigation();
+        
+        this.target = target;
 	}
 
 	@Override
 	public void start() {
 		if(target == null){
-			log.log(Level.INFO, "Cannot navigate to null target [Move.start()]");
+			log.log(Level.WARNING, "Cannot navigate to null target [Move.start()]");
 		}
 		
 		// navigovate only if we don't navigating, or we navigating to different target

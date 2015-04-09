@@ -19,7 +19,8 @@ package com.fido.ctfbot.modules;
 import com.fido.ctfbot.activities.Activity;
 import com.fido.ctfbot.activities.FightEnemy;
 import com.fido.ctfbot.CTFChampion;
-import com.fido.ctfbot.InformationBase;
+import com.fido.ctfbot.informations.InformationBase;
+import com.fido.ctfbot.activities.Move;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
@@ -38,8 +39,6 @@ import java.util.logging.Level;
  */
 public class ActivityPlanner extends CTFChampionModule{
 	
-	private ActionPlanner actionPlanner;
-	
 	private final AdvancedLocomotion move;
 	
 	private final CTF ctf;
@@ -49,8 +48,10 @@ public class ActivityPlanner extends CTFChampionModule{
 	private final IUT2004Navigation navigation;
 	
 	private final Players players;
+    
 	
-	
+	private ActionPlanner actionPlanner;
+    
 	private Activity currentActivity;
 	
 	
@@ -78,6 +79,9 @@ public class ActivityPlanner extends CTFChampionModule{
 			case GET_ENEMY_FLAG:
 				getEnemyFlag();
 				break;
+            case GET_BACK_OUR_FLAG:
+                getBackOurFlag();
+                break;
 		}
 	}
 
@@ -87,7 +91,7 @@ public class ActivityPlanner extends CTFChampionModule{
 			guardBase();
 		}
 		else{
-			
+			getBackOurFlag();
 		}
 	}
 
@@ -169,4 +173,27 @@ public class ActivityPlanner extends CTFChampionModule{
 		activity.start();
 		currentActivity = activity;
 	}
+
+    private void getBackOurFlag() {
+        
+        // bot carrying enemy flag - continue going home
+        if(ctf.isBotCarryingEnemyFlag()){
+            runActivity(new Move(informationBase, log, ctf.getOurBase().getLocation()));
+        }
+        else{
+            // vidíme vlajku
+            if(ctf.getOurFlag().isVisible()){
+                // grab our flag!
+                if(ctf.isOurFlagDropped()){
+                    runActivity(new Move(informationBase, log, ctf.getOurFlag().getLocation()));
+                }
+                else{
+                    runActivity(new FightEnemy(informationBase, log, players.getPlayer(ctf.getOurFlag().getHolder())));
+                }
+            }
+            else{
+                
+            }
+        }
+    }
 }

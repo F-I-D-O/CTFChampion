@@ -23,5 +23,6 @@ package com.fido.ctfbot;
 public enum Goal {
 	GUARD_OUR_FLAG,
 	GET_ENEMY_FLAG,
-	PICK_UP_NEAR_OUR_BASE
+	PICK_UP_NEAR_OUR_BASE,
+    GET_BACK_OUR_FLAG
 }

@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
+package com.fido.ctfbot.informations;
 
+import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.FriendInfo;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;

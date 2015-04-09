@@ -16,7 +16,7 @@
  */
 package com.fido.ctfbot.activities;
 
-import com.fido.ctfbot.InformationBase;
+import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 
 /**

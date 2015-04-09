@@ -16,13 +16,14 @@
  */
 package com.fido.ctfbot.activities;
 
-import com.fido.ctfbot.InformationBase;
+import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import java.util.logging.Level;
 
 /**
  *
@@ -37,26 +38,43 @@ public class FightEnemy extends Activity {
 	private final ImprovedShooting shoot;
 	
 	private final WeaponPrefs weaponPrefs;
+    
+    
+    private Player chosenEmemy;
 	
-	
+	/**
+     * Constructor with no enemy. Nerest enemz will be choses
+     * @param informationBase
+     * @param log 
+     */
 	public FightEnemy(InformationBase informationBase, LogCategory log) {
 		super(informationBase, log);
 		players = informationBase.getPlayers();
 		navigation = informationBase.getNavigation();
 		shoot = informationBase.getShoot();
 		weaponPrefs = informationBase.getWeaponPrefs();
+        chosenEmemy = players.getNearestVisibleEnemy();
+	}
+    
+    public FightEnemy(InformationBase informationBase, LogCategory log, Player enemy) {
+		super(informationBase, log);
+		players = informationBase.getPlayers();
+		navigation = informationBase.getNavigation();
+		shoot = informationBase.getShoot();
+		weaponPrefs = informationBase.getWeaponPrefs();
+        chosenEmemy = enemy;
 	}
 
 	@Override
 	public void start() {
-		if(players.canSeeEnemies()){
-			Player chosenEmemy = players.getNearestVisibleEnemy();
-			if(chosenEmemy != null){
-				navigation.setFocus(chosenEmemy);
-				navigation.navigate(chosenEmemy);
-				shoot.shoot(weaponPrefs, chosenEmemy);
-			}
-		}
+        if(chosenEmemy != null){
+            navigation.setFocus(chosenEmemy);
+            navigation.navigate(chosenEmemy);
+            shoot.shoot(weaponPrefs, chosenEmemy);
+        }
+        else{
+            log.log(Level.WARNING, "Chosen enemy null [FightEnemy.start()]");
+        }
 	}
 	
 }

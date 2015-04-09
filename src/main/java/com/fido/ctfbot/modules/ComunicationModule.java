@@ -18,7 +18,7 @@ package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
-import com.fido.ctfbot.InformationBase;
+import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.FriendInfo;
 import com.fido.ctfbot.messages.CommandMessage;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;

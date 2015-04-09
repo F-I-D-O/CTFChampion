@@ -14,27 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.modules;
+package com.fido.ctfbot.informations.flags;
 
-import com.fido.ctfbot.CTFChampion;
-import com.fido.ctfbot.informations.InformationBase;
-import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 
 /**
  *
- * @author Fido
+ * @author david_000
  */
-class CTFChampionModule {
-	
-	protected final LogCategory log;
-	
-	protected final CTFChampion bot;
-	
-	protected final InformationBase informationBase;
-	
-	public CTFChampionModule(CTFChampion bot, LogCategory log, InformationBase informationBase) {
-		this.bot = bot;
-		this.log = log;
-		this.informationBase = informationBase;
-	}
+public class FlagInfo {
+    
+    private cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag;
+    
+    private Location lastKnownPosition;
+    
+    private double lastKnownPositionTime;
 }

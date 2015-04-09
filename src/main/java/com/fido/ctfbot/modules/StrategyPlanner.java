@@ -18,7 +18,7 @@ package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
-import com.fido.ctfbot.InformationBase;
+import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.Strategy;
 import com.fido.ctfbot.informations.FriendInfo;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
@@ -36,7 +36,6 @@ import java.util.logging.Level;
 public class StrategyPlanner extends CTFChampionModule{
 	
 	public static final Goal DEFAULT_STARTUP_GOAL = Goal.GUARD_OUR_FLAG;
-	
 	
 	
 	private final ComunicationModule comunicationModule;
@@ -100,7 +99,7 @@ public class StrategyPlanner extends CTFChampionModule{
 				succes = steelEnemyFlag();
 				break;
 			case GET_BACK_OUR_FLAG:
-				succes = true;
+				succes = getBackOurFlag();
 				break;
 		}
 		return succes;
@@ -154,5 +153,13 @@ public class StrategyPlanner extends CTFChampionModule{
 		}
 		return true;
 	}
+
+    private boolean getBackOurFlag() {
+        HashMap<UnrealId,FriendInfo> friendsTmp = getCopyFriendInfo();
+		
+		boolean commandIssued = issueCommand(new ArrayList<FriendInfo>(friendsTmp.values()), Goal.GET_BACK_OUR_FLAG);
+        
+        return commandIssued;
+    }
 	
 }
