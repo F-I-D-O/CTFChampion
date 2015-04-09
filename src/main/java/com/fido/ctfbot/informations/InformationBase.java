@@ -17,7 +17,8 @@
 package com.fido.ctfbot.informations;
 
 import com.fido.ctfbot.CTFChampion;
-import com.fido.ctfbot.informations.FriendInfo;
+import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
+import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
@@ -48,7 +49,7 @@ public class InformationBase {
 	
 	private final Players players;
 	
-	private final CTF ctfInfo;
+	private final CTF ctf;
 	
 	private final AgentInfo info;
 	
@@ -65,7 +66,9 @@ public class InformationBase {
 	
 	private final WeaponPrefs weaponPrefs;
 	
+	private OurFlagInfo ourFlagInfo;
 	
+	private EnemyFlagInfo enemyFlagInfo;
 	
 	
 	
@@ -79,7 +82,7 @@ public class InformationBase {
 	}
 
 	public CTF getCtf() {
-		return ctfInfo;
+		return ctf;
 	}
 
 	public IUT2004Navigation getNavigation() {
@@ -92,6 +95,14 @@ public class InformationBase {
 
 	public WeaponPrefs getWeaponPrefs() {
 		return weaponPrefs;
+	}
+
+	public OurFlagInfo getOurFlagInfo() {
+		return ourFlagInfo;
+	}
+
+	public EnemyFlagInfo getEnemyFlagInfo() {
+		return enemyFlagInfo;
 	}
 	
 	
@@ -107,13 +118,13 @@ public class InformationBase {
 	
 	
 	
-	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctfInfo, IPathPlanner mainPathPlanner,
+	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctf, IPathPlanner mainPathPlanner,
 			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, 
 			WeaponPrefs weaponPrefs) {
 		this.log = log;
 		this.bot = bot;
 		this.players = players;
-		this.ctfInfo = ctfInfo;
+		this.ctf = ctf;
 		this.info = info;
 		this.fwMap = fwMap;
 		this.navigation = navigation;
@@ -167,6 +178,11 @@ public class InformationBase {
 			return fwMap.getDistance(info.getNearestNavPoint(from), info.getNearestNavPoint(to));
 //		}
 		
+	}
+
+	public void initFlags() {
+		ourFlagInfo = new OurFlagInfo(ctf.getOurFlag(), ctf.getOurBase().getLocation(), info.getTime());
+		enemyFlagInfo = new EnemyFlagInfo(ctf.getEnemyFlag(), ctf.getEnemyBase().getLocation(), info.getTime());
 	}
 	
 	

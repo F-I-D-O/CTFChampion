@@ -16,11 +16,17 @@
  */
 package com.fido.ctfbot.informations.flags;
 
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+
 /**
  *
  * @author david_000
  */
-public class EnemyFlagInfo {
+public class EnemyFlagInfo extends FlagInfo{
+
+	public EnemyFlagInfo(cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
+		super(flag, lastKnownPosition, lastKnownPositionTime);
+	}
     
     
     

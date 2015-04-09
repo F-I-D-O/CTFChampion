@@ -43,7 +43,7 @@ public class Move extends Activity {
 	}
 
 	@Override
-	public void start() {
+	public void run() {
 		if(target == null){
 			log.log(Level.WARNING, "Cannot navigate to null target [Move.start()]");
 		}
@@ -52,8 +52,18 @@ public class Move extends Activity {
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(target)){
 			navigation.navigate(target);
 		}
-		
-		
 	}
+
+	@Override
+	protected void close() {
+		navigation.stopNavigation();
+	}
+
+	@Override
+	protected boolean activityParametrsEquals(Object obj) {
+		return target.equals(((Move) obj).target);
+	}
+	
+	
 	
 }

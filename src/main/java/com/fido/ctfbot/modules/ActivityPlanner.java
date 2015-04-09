@@ -21,6 +21,8 @@ import com.fido.ctfbot.activities.FightEnemy;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.activities.Move;
+import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
+import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
@@ -39,6 +41,11 @@ import java.util.logging.Level;
  */
 public class ActivityPlanner extends CTFChampionModule{
 	
+	private static final double OUR_FLAG_LOCATION_EXPIRE_TIME = 5;
+	
+	private static final double OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION = 1000;
+	
+	
 	private final AdvancedLocomotion move;
 	
 	private final CTF ctf;
@@ -54,6 +61,10 @@ public class ActivityPlanner extends CTFChampionModule{
     
 	private Activity currentActivity;
 	
+	private OurFlagInfo ourFlagInfo;
+	
+	private EnemyFlagInfo enemyFlagInfo;
+	
 	
 
 	public ActivityPlanner(CTFChampion bot, LogCategory log, AdvancedLocomotion move, CTF ctf, AgentInfo info,
@@ -64,6 +75,9 @@ public class ActivityPlanner extends CTFChampionModule{
 		this.info = info;
 		this.navigation = navigation;
 		this.players = informationBase.getPlayers();
+		
+		this.ourFlagInfo = informationBase.getOurFlagInfo();
+		this.enemyFlagInfo = informationBase.getEnemyFlagInfo();
 	}
 
 	public void init(ActionPlanner actionPlanner){
@@ -169,9 +183,19 @@ public class ActivityPlanner extends CTFChampionModule{
 	}
 	
 	private void runActivity(Activity activity){
-		bot.setName(activity.getName());
-		activity.start();
-		currentActivity = activity;
+		
+		// if new activity differs from the previous. Insances of the same Activity can differ, so it's necessary to
+		// overide equals
+		if(!activity.equals(currentActivity)){
+			currentActivity.end();
+			bot.setName(activity.getName());
+			activity.start();
+			
+			currentActivity = activity;
+		}
+		
+		currentActivity.run();
+		
 	}
 
     private void getBackOurFlag() {
@@ -181,18 +205,28 @@ public class ActivityPlanner extends CTFChampionModule{
             runActivity(new Move(informationBase, log, ctf.getOurBase().getLocation()));
         }
         else{
-            // vidíme vlajku
+            // bot see the flag
             if(ctf.getOurFlag().isVisible()){
                 // grab our flag!
                 if(ctf.isOurFlagDropped()){
                     runActivity(new Move(informationBase, log, ctf.getOurFlag().getLocation()));
                 }
+				// fight the thief
                 else{
                     runActivity(new FightEnemy(informationBase, log, players.getPlayer(ctf.getOurFlag().getHolder())));
                 }
             }
             else{
-                
+				// bot knows where the flag was recently, go to that place
+                if(ourFlagInfo.getLastKnownLocationTime() < OUR_FLAG_LOCATION_EXPIRE_TIME && 
+						informationBase.getDistance(ourFlagInfo.getLastKnownLocation(), info.getLocation()) < 
+							OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION){
+					runActivity(new Move(informationBase, log, ourFlagInfo.getLastKnownLocation()));
+				}
+				// go to enemy base and wait for him!
+				else{
+					runActivity(new Move(informationBase, log, ctf.getEnemyFlag().getLocation()));
+				}
             }
         }
     }

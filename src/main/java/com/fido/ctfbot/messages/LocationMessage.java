@@ -14,20 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.informations.flags;
-
-import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+package com.fido.ctfbot.messages;
 
 /**
  *
- * @author david_000
+ * @author Fido
  */
-public class OurFlagInfo extends FlagInfo {
-
-	public OurFlagInfo(cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
-		super(flag, lastKnownPosition, lastKnownPositionTime);
-	}
-
-
-    
+public class LocationMessage {
+	
 }

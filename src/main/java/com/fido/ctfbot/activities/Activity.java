@@ -18,6 +18,7 @@ package com.fido.ctfbot.activities;
 
 import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
+import java.util.logging.Level;
 
 /**
  *
@@ -42,7 +43,43 @@ public abstract class Activity {
 		return this.getClass().getSimpleName();
 	}
 
-	public abstract void start();
+	public abstract void run();
 	
+	
+	public final void start(){
+		 log.log(Level.INFO, "Activity {0} started. [start()]", this.getClass().getSimpleName());
+	}
+	
+	public final void end(){
+		close();
+		log.log(Level.INFO, "Activity {0} ended. [end()]", this.getClass().getSimpleName());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		
+		// null test
+		if(obj == null){
+			return false;
+		}
+		
+		// early success
+		if(super.equals(obj)){
+			return true;
+		}
+		
+		// same class test
+		if(this.getClass().equals(obj.getClass())){
+			return false;
+		};
+		
+		// activity state test
+		return activityParametrsEquals(obj);
+	}
+
+	protected abstract void close();
+
+	protected abstract boolean activityParametrsEquals(Object obj);
+
 	
 }

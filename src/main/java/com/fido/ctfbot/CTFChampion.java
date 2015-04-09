@@ -72,6 +72,11 @@ import java.util.logging.Level;
 @AgentScoped
 public class CTFChampion extends UT2004BotTCController {
 	
+	private static final double LOCATION_MESSAGE_SEND_INTERVAL = 5;
+
+	
+	
+	
 	public static LogCategory logStatic;
 	
 	
@@ -107,6 +112,8 @@ public class CTFChampion extends UT2004BotTCController {
 	private IPathPlanner mainPathPlanner;
 	
 	private String startName;
+	
+	private double lastLocationMessageSendTime = 0;
 	
     // Follwing fields are required only iff code inside {@link EmptyBot#logic()} is uncommented.
     private long   lastLogicTime        = -1;
@@ -366,7 +373,11 @@ public class CTFChampion extends UT2004BotTCController {
 			strategyPlanner.makeStrategy();
 		}
 		
+		informationBase.initFlags();
+		
 		actionPlanner.takeOver();
+		
+		sendLocationMessage();
         
 //		if(players.canSeePlayers() || fightCounter > 0){
 //        if(players.canSeePlayers()){
@@ -582,5 +593,11 @@ public class CTFChampion extends UT2004BotTCController {
 	public void setName(String state){
 		String name = isLeader() ? String.format("%s (leader)", startName) : startName;
 		config.setName(String.format("%s - %s, %s", name, getGoal(), state));
+	}
+
+	private void sendLocationMessage() {
+		if(info.getTime() - lastLocationMessageSendTime >  LOCATION_MESSAGE_SEND_INTERVAL){
+			comunicationModule.sendLocationMessage()
+		}
 	}
 }

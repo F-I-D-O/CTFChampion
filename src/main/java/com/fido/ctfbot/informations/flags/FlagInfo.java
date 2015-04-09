@@ -29,4 +29,30 @@ public class FlagInfo {
     private Location lastKnownPosition;
     
     private double lastKnownPositionTime;
+
+	
+	
+	
+	public cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo getFlag() {
+		return flag;
+	}
+
+	public Location getLastKnownLocation() {
+		return lastKnownPosition;
+	}
+
+	public double getLastKnownLocationTime() {
+		return lastKnownPositionTime;
+	}
+	
+	
+	
+
+	public FlagInfo(cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
+		this.flag = flag;
+		this.lastKnownPosition = lastKnownPosition;
+		this.lastKnownPositionTime = lastKnownPositionTime;
+	}
+	
+	
 }

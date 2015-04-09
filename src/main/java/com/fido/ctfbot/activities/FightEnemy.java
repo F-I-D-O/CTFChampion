@@ -41,6 +41,15 @@ public class FightEnemy extends Activity {
     
     
     private Player chosenEmemy;
+
+	
+	public Player getChosenEmemy() {
+		return chosenEmemy;
+	}
+	
+	
+	
+	
 	
 	/**
      * Constructor with no enemy. Nerest enemz will be choses
@@ -66,7 +75,7 @@ public class FightEnemy extends Activity {
 	}
 
 	@Override
-	public void start() {
+	public void run() {
         if(chosenEmemy != null){
             navigation.setFocus(chosenEmemy);
             navigation.navigate(chosenEmemy);
@@ -76,5 +85,18 @@ public class FightEnemy extends Activity {
             log.log(Level.WARNING, "Chosen enemy null [FightEnemy.start()]");
         }
 	}
+
+
+	@Override
+	protected void close() {
+		shoot.stopShooting();
+	}
+
+	@Override
+	protected boolean activityParametrsEquals(Object activity) {
+		return this.chosenEmemy.getId().equals(((FightEnemy) activity).chosenEmemy.getId()); 
+	}
+	
+	
 	
 }
