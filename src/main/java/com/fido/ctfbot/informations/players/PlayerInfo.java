@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.informations;
+package com.fido.ctfbot.informations.players;
 
 import com.fido.ctfbot.CTFChampion;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
@@ -29,9 +29,17 @@ import java.util.logging.Level;
  */
 public abstract class PlayerInfo {
 	
+	/**
+	 * Id of player. Cannot be null.
+	 */
 	protected final Players players;
 	
-	protected final Player player;
+	protected final UnrealId playerId;
+	
+	/**
+	 * Player message from players. Can be null, if player was loaded after self
+	 */
+	protected Player player;
 	
 	protected Location lastKnownLocation;
 	
@@ -41,9 +49,17 @@ public abstract class PlayerInfo {
 		return player;
 	}
 
-	public PlayerInfo(Player player, Location lastKnownLocation, Players players) {
+	public void setLastKnownLocation(Location lastKnownLocation) {
+		this.lastKnownLocation = lastKnownLocation;
+	}
+	
+	
+	
+
+	public PlayerInfo(UnrealId playerId, Player player, Location lastKnownLocation, Players players) {
 		this.players = players;
 		this.player = player;
+		this.playerId = playerId;
 		
 		if(lastKnownLocation == null){
 			this.lastKnownLocation = new Location(0, 0, 0);
@@ -59,7 +75,7 @@ public abstract class PlayerInfo {
 	public Location getBestLocation(){
 		
 		// we don't see the player, returns last known location
-		if(players.getVisiblePlayer(player.getId()) == null){
+		if(players.getVisiblePlayer(playerId) == null){
 			return lastKnownLocation;
 		}
 		// return exact location
@@ -70,11 +86,22 @@ public abstract class PlayerInfo {
 	
 	
 	public String getName(){
+		
+		// player instance wasn't created yet in players
+		if(player == null){
+			return "Unknown";
+		}
 		return player.getName();
 	}
 	
 	public UnrealId getId(){
-		return player.getId();
+		return playerId;
+	}
+
+	public void connectPlayer(Player player) {
+		this.player = player;
+		CTFChampion.logStatic.log(Level.INFO, 
+					"Player {0} connected. [connectPlayer()]", getName()); 
 	}
 	
 	

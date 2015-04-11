@@ -16,9 +16,12 @@
  */
 package com.fido.ctfbot.informations;
 
+import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
+import com.fido.ctfbot.informations.players.EnemyInfo;
+import com.fido.ctfbot.informations.players.PlayerInfo;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
@@ -32,7 +35,9 @@ import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Level;
 
 /**
@@ -41,7 +46,12 @@ import java.util.logging.Level;
  */
 public class InformationBase {
 	
-	private static double MAX_DISTANCE = 999999999;
+	private static final double MAX_DISTANCE = 999999999;
+	
+	public static final int TEAM_SIZE = 3;
+	
+	
+	
 	
 	private final CTFChampion bot;
 	
@@ -59,16 +69,27 @@ public class InformationBase {
 	
 	private final ImprovedShooting shoot;
 	
+	private final WeaponPrefs weaponPrefs;
+	
 	
 	private final HashMap<UnrealId, FriendInfo> friends;
 	
-	private final IPathPlanner mainPathPlanner;
+	private final HashMap<UnrealId, EnemyInfo> enemies;
 	
-	private final WeaponPrefs weaponPrefs;
+	private final HashMap<UnrealId, PlayerInfo> allPlayersInfo;
+	
+	private final  ArrayList<UnrealId> unidentifiedPlayersIds;
+	
+	private final IPathPlanner mainPathPlanner;
 	
 	private OurFlagInfo ourFlagInfo;
 	
 	private EnemyFlagInfo enemyFlagInfo;
+	
+	private int numberOfNotConnectedPlayers = 0;
+	
+	
+	
 	
 	
 	
@@ -104,15 +125,29 @@ public class InformationBase {
 	public EnemyFlagInfo getEnemyFlagInfo() {
 		return enemyFlagInfo;
 	}
-	
-	
-	
-	
-	
 
+	public AgentInfo getInfo() {
+		return info;
+	}
+	
 	public HashMap<UnrealId, FriendInfo> getFriends() {
 		return friends;
 	}
+
+	public HashMap<UnrealId, EnemyInfo> getEnemies() {
+		return enemies;
+	}
+
+	public HashMap<UnrealId, PlayerInfo> getAllPlayersInfo() {
+		return allPlayersInfo;
+	}
+
+	public int getNumberOfNotConnectedPlayers() {
+		return numberOfNotConnectedPlayers;
+	}
+	
+	
+	
 	
 	
 	
@@ -133,25 +168,62 @@ public class InformationBase {
 		
 		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();
+		enemies = new HashMap<UnrealId, EnemyInfo>();
+		allPlayersInfo = new HashMap<UnrealId, PlayerInfo>();
+		unidentifiedPlayersIds = new ArrayList<UnrealId>();
 	}
 
 	
 	
 	
 	public void addPlayer(UnrealId id) {
-		Player friend = players.getPlayer(id);
-		if(players.getFriends().get(id) != null || info.getId() == id){
-			friends.put(id, new FriendInfo(friend, players));
+		Player player = players.getPlayer(id);
+		
+		// player instance hasn't been created in players yet
+		if(player == null){
+			unidentifiedPlayersIds.add(id);
+		}
+		else{
+			if(players.getFriends().get(id) != null){
+				FriendInfo friendInfo = new FriendInfo(player, players);
+				friends.put(id, friendInfo);
+				allPlayersInfo.put(id, friendInfo);
+			}
+			else if(players.getEnemies().get(id) != null){
+				EnemyInfo enemyInfo = new EnemyInfo(player, players);
+				enemies.put(player.getId(), enemyInfo);
+				allPlayersInfo.put(player.getId(), enemyInfo);
+			}
 		}
 	}
 	
+	private void addBlankFriend(UnrealId id){
+		FriendInfo friendInfo = new FriendInfo(id, players);
+		friends.put(id, friendInfo);
+		allPlayersInfo.put(id, friendInfo);
+		numberOfNotConnectedPlayers++;
+	}
+	
+	private void addBlankEnemy(UnrealId id){
+		EnemyInfo enemyInfo = new EnemyInfo(id, players);
+		enemies.put(id, enemyInfo);
+		allPlayersInfo.put(id, enemyInfo);
+		numberOfNotConnectedPlayers++;
+	}
+	
 	public void addSelf() {
-		friends.put(info.getId(), new FriendInfo(info, players));
+		FriendInfo friendInfo = new FriendInfo(info, players);
+		friends.put(info.getId(), friendInfo);
+		allPlayersInfo.put(info.getId(), friendInfo);
 	}
 	
 	public void addPlayersAlreadyInGame(){
 		for(Player friend : players.getFriends().values()){
 			friends.put(friend.getId(), new FriendInfo(friend, players));
+		}
+		
+		for(Player enemy : players.getEnemies().values()){
+			enemies.put(enemy.getId(), new EnemyInfo(enemy, players));
 		}
 	}
 	
@@ -183,6 +255,48 @@ public class InformationBase {
 	public void initFlags() {
 		ourFlagInfo = new OurFlagInfo(ctf.getOurFlag(), ctf.getOurBase().getLocation(), info.getTime());
 		enemyFlagInfo = new EnemyFlagInfo(ctf.getEnemyFlag(), ctf.getEnemyBase().getLocation(), info.getTime());
+	}
+
+	public void updateFriendLocation(UnrealId unrealId, Location location) {
+		FriendInfo friendInfo = friends.get(unrealId);
+		if(friendInfo == null){
+			log.log(Level.INFO, 
+					"Friend {0} location cannot be updatede - friendInfo is not initialized yet: [updateFriendLocation()]", 
+					unrealId);
+		}
+		else{
+			friendInfo.setLastKnownLocation(location);	
+		}
+	}
+	
+	public synchronized void tryAddBlankFriend(UnrealId unrealId){
+		if(!friends.containsKey(unrealId)){
+			addBlankFriend(unrealId);
+			unidentifiedPlayersIds.remove(unrealId);
+		}
+	}
+
+	public synchronized void processMissingPlayers() {
+		
+		// the graeter than operator has to be here because of human player!
+		if(friends.size() >= TEAM_SIZE){
+			UnrealId playerId;
+			for (final Iterator iterator = unidentifiedPlayersIds.iterator(); iterator.hasNext();) {
+				playerId = (UnrealId) iterator.next();
+				addBlankEnemy(playerId);
+				iterator.remove();
+			}
+		}
+	}
+
+	public void tryConnectPlayer(Player player) {
+		PlayerInfo playerInfo = allPlayersInfo.get(player.getId());
+		
+		// first test: if player info was initialized, second test: if player is connected 
+		if(playerInfo != null && playerInfo.getPlayer() == null){
+			playerInfo.connectPlayer(player);
+			numberOfNotConnectedPlayers--;
+		}
 	}
 	
 	

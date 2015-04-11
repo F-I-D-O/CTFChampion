@@ -20,7 +20,7 @@ import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.Strategy;
-import com.fido.ctfbot.informations.FriendInfo;
+import com.fido.ctfbot.informations.players.FriendInfo;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;

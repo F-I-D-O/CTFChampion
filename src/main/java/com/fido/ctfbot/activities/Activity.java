@@ -69,9 +69,9 @@ public abstract class Activity {
 		}
 		
 		// same class test
-		if(this.getClass().equals(obj.getClass())){
+		if(!this.getClass().equals(obj.getClass())){
 			return false;
-		};
+		}
 		
 		// activity state test
 		return activityParametrsEquals(obj);

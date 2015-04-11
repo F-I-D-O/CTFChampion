@@ -16,19 +16,16 @@
  */
 package com.fido.ctfbot.informations.flags;
 
+import com.fido.ctfbot.informations.LocationInfo;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 
 /**
  *
  * @author david_000
  */
-public class FlagInfo {
+public abstract class FlagInfo extends LocationInfo{
     
     private cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag;
-    
-    private Location lastKnownPosition;
-    
-    private double lastKnownPositionTime;
 
 	
 	
@@ -37,21 +34,15 @@ public class FlagInfo {
 		return flag;
 	}
 
-	public Location getLastKnownLocation() {
-		return lastKnownPosition;
-	}
 
-	public double getLastKnownLocationTime() {
-		return lastKnownPositionTime;
-	}
 	
 	
 	
 
-	public FlagInfo(cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
+	public FlagInfo(cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, 
+			Location lastKnownPosition, double lastKnownPositionTime) {
+		super(lastKnownPosition, lastKnownPositionTime);
 		this.flag = flag;
-		this.lastKnownPosition = lastKnownPosition;
-		this.lastKnownPositionTime = lastKnownPositionTime;
 	}
 	
 	

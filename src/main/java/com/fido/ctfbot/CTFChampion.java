@@ -7,9 +7,11 @@ import com.fido.ctfbot.modules.ComunicationModule;
 import com.fido.ctfbot.modules.ActivityPlanner;
 import com.fido.ctfbot.modules.ActionPlanner;
 import com.fido.ctfbot.messages.CommandMessage;
+import com.fido.ctfbot.messages.LocationMessage;
 import cz.cuni.amis.introspection.java.JProp;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
+import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
 import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base.utils.math.DistanceUtils;
@@ -73,6 +75,8 @@ import java.util.logging.Level;
 public class CTFChampion extends UT2004BotTCController {
 	
 	private static final double LOCATION_MESSAGE_SEND_INTERVAL = 5;
+	
+	
 
 	
 	
@@ -101,8 +105,6 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	private ArrayList<ItemStatistic> harvestingPriorities;
 	
-	private HashMap<UnrealId,EnemyInfo> enemies;
-	
 	private InformationBase informationBase;
 	
 	private Goal goal = Goal.GUARD_OUR_FLAG;
@@ -114,6 +116,13 @@ public class CTFChampion extends UT2004BotTCController {
 	private String startName;
 	
 	private double lastLocationMessageSendTime = 0;
+	
+	private boolean firsLogic = true;
+	
+	private boolean allBotsInGame = false;
+	
+	private boolean allPlayersConnectedToInformationBase = false;
+	
 	
     // Follwing fields are required only iff code inside {@link EmptyBot#logic()} is uncommented.
     private long   lastLogicTime        = -1;
@@ -169,6 +178,23 @@ public class CTFChampion extends UT2004BotTCController {
 	   
     }
 	
+	@EventListener(eventClass = LocationMessage.class)
+    public void onLocationAquired(LocationMessage locationMessage){
+       log.log(Level.INFO, "Location aquired: type: {0}, unrealId: {1} loaction: {2}", 
+			new String[]{locationMessage.getInfoType().toString(), locationMessage.getUnrealId().toString(),
+				locationMessage.getLocation().toString()}); 
+	   
+		switch(locationMessage.getInfoType()){
+			case FRIEND:
+				if(!allBotsInGame){
+					informationBase.tryAddBlankFriend(locationMessage.getUnrealId());
+				}
+				informationBase.updateFriendLocation(locationMessage.getUnrealId(), locationMessage.getLocation());
+				break;
+		}
+	   
+    }
+	
 	@EventListener(eventClass = ItemPickedUp.class)
 	private void OnItemPickedUp(ItemPickedUp event){
 		ItemStatistic itemStat = itemStatistics.get(event.getId());
@@ -185,8 +211,22 @@ public class CTFChampion extends UT2004BotTCController {
 	@EventListener(eventClass = PlayerJoinsGame.class)
 	private void OnPlayerJoinsGame(PlayerJoinsGame event){
 		informationBase.addPlayer(event.getId());
-		
-//		addEnemy(event.getId());
+		log.log(Level.INFO, "Player {0} joined game", event.getName()); 
+	}
+	
+	@EventListener(eventClass = WorldObjectUpdatedEvent.class)
+	private void OnPlayerWorldObjectUpdated(WorldObjectUpdatedEvent event){
+		if(event.getObject() instanceof Player){
+			if(!allPlayersConnectedToInformationBase){
+				informationBase.tryConnectPlayer((Player) event.getObject());
+				
+				if(informationBase.getNumberOfNotConnectedPlayers() == 0){
+					this.allPlayersConnectedToInformationBase = true;
+				}
+//				log.log(Level.INFO, "Player {0} update event aquired", event.getName()); 
+			}
+			
+		}
 	}
 	
 	
@@ -212,11 +252,7 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		ititWeaponPreferences();
 		
-		initializeModules();
-		
-		enemies = new HashMap<UnrealId, EnemyInfo>();
-		
-		
+		initializeModules();		
 	
         // By uncommenting following line, you can make the bot to do the file logging of all its components
         //bot.getLogger().addDefaultFileHandler(new File("EmptyBot.log"));
@@ -255,12 +291,6 @@ public class CTFChampion extends UT2004BotTCController {
 			ItemStatistic itemStat = new ItemStatistic(item, fwMap, info, navigation, log);
 			itemStatistics.put(item.getId(), itemStat);
 //			log.log(Level.INFO, "item statistic initialized for item{0}", item.getId()); 
-		}
-		
-		for(Player player : players.getPlayers().values()){
-			if(!player.getId().equals(info.getId())){
-				addEnemy(player.getId());
-			}
 		}
 		
 		log.info("botInitialized end"); 
@@ -310,8 +340,6 @@ public class CTFChampion extends UT2004BotTCController {
      */
     @Override
     public void beforeFirstLogic() {
-		
-		
     }
     
     private void sayGlobal(String msg) {
@@ -361,32 +389,31 @@ public class CTFChampion extends UT2004BotTCController {
         if (lastLogicTime > 0){
 			log.log(Level.INFO, "Logic invoked after: {0} ms", currTime - lastLogicTime);
 		}
-        lastLogicTime = currTime;
-        
-//        info.getT
+		lastLogicTime = currTime;
 		
-//		decreaseRespawnTimes();
-//		calculateWeaponsPriority();
-//		callculateHarvestingPriority();
-		
-		if(leader){
-			strategyPlanner.makeStrategy();
+		// stuff that should be done only once, and can|t be done since logic
+		if(firsLogic){
+			doFirstLogicInit();
+			firsLogic = false;
 		}
 		
-		informationBase.initFlags();
+        
 		
-		actionPlanner.takeOver();
+		// checks that no action is taken until all bots are in game
+		if(allBotsInGame || checkAllBotsInGame()){
+			
+	//		decreaseRespawnTimes();
+	//		calculateWeaponsPriority();
+	//		callculateHarvestingPriority();
+
+			if(leader){
+				strategyPlanner.makeStrategy();
+			}
+
+			actionPlanner.takeOver();
+		}
 		
 		sendLocationMessage();
-        
-//		if(players.canSeePlayers() || fightCounter > 0){
-//        if(players.canSeePlayers()){
-//			dealWithEnemis();   
-//        }
-//        else{
-//            takeNonEnemyAction();
-//        }
-        
     }
 
     
@@ -566,12 +593,6 @@ public class CTFChampion extends UT2004BotTCController {
         Collections.sort(harvestingPriorities, Collections.reverseOrder());
 	}
 
-	private void addEnemy(UnrealId id) {
-		Player enemy = players.getPlayer(id);
-		enemies.put(id, new EnemyInfo(enemy));
-		log.log(Level.INFO, "Enemy added: {0} [calculateWeaponsPriority()]", id);
-	}
-
 	/**
 	 * Initialize bot modules
 	 */
@@ -597,7 +618,25 @@ public class CTFChampion extends UT2004BotTCController {
 
 	private void sendLocationMessage() {
 		if(info.getTime() - lastLocationMessageSendTime >  LOCATION_MESSAGE_SEND_INTERVAL){
-			comunicationModule.sendLocationMessage()
+			comunicationModule.sendMyLocationMessage();
+			lastLocationMessageSendTime = info.getTime();
 		}
+	}
+
+	private void doFirstLogicInit() {
+		informationBase.initFlags();
+		activityPlanner.initFlagInfo();
+	}
+
+	private boolean checkAllBotsInGame() {
+		informationBase.processMissingPlayers();
+		
+		// there we expecttwo teams and human player as observer.
+		if(informationBase.getFriends().size() + informationBase.getEnemies().size() == 
+				InformationBase.TEAM_SIZE * 2 + 1){
+			allBotsInGame = true;
+			return true;
+		}
+		return false;
 	}
 }

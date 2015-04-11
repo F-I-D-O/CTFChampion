@@ -14,44 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.messages;
+package com.fido.ctfbot.informations.players;
 
-import com.fido.ctfbot.Goal;
-import com.fido.ctfbot.informations.players.FriendInfo;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
-import cz.cuni.amis.utils.token.IToken;
-import cz.cuni.amis.utils.token.Tokens;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 
 /**
  *
  * @author Fido
  */
-public class CommandMessage extends Message {
-	
-	public static final IToken MESSAGE_TYPE = Tokens.get("Command");
-	
-	private final UnrealId targetPlayerId;
-	
-	private final Goal goal;
+public class EnemyInfo extends PlayerInfo{
 
-	
-	
-	public UnrealId getTargetPlayerId() {
-		return targetPlayerId;
+	public EnemyInfo(Player player, Players players) {
+		super(player.getId(), player, player.getLocation(), players);
 	}
 
-	public Goal getGoal() {
-		return goal;
+	public EnemyInfo(UnrealId id, Players players) {
+		super(id, null, null, players);
 	}
-
 	
-
-	public CommandMessage(FriendInfo targetPlayer, Goal goal) {
-		super(String.format("Goal: %s was assigned to player %s", goal.toString(), targetPlayer.getName()), 
-				MESSAGE_TYPE);
-		this.targetPlayerId = targetPlayer.getId();
-		this.goal = goal;
-	}
-
+	
 	
 }

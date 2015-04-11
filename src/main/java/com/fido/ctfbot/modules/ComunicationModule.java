@@ -19,8 +19,10 @@ package com.fido.ctfbot.modules;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.informations.InformationBase;
-import com.fido.ctfbot.informations.FriendInfo;
+import com.fido.ctfbot.informations.players.FriendInfo;
+import com.fido.ctfbot.informations.InfoType;
 import com.fido.ctfbot.messages.CommandMessage;
+import com.fido.ctfbot.messages.LocationMessage;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004TCClient;
 import java.util.logging.Level;
@@ -49,7 +51,7 @@ public class ComunicationModule extends CTFChampionModule {
 			return false;
 		}
 		
-		log.log(Level.INFO, "Sending command: {0} for {1} [issueCommand()]", 
+		log.log(Level.INFO, "Sending command: {0} for {1} [sendCommand()]", 
 				new String[]{goal.toString(), friend.getName()});
 		return teamComClient.sendToTeam(new CommandMessage(friend, goal));
 	}
@@ -62,5 +64,15 @@ public class ComunicationModule extends CTFChampionModule {
 			log.log(Level.INFO, "TeamCom clien is not ready yet: [isTeamComReady()]");
 			return false;
 		}
+	}
+
+	public void sendMyLocationMessage() {
+		if(!isTeamComReady()){
+			return;
+		}
+		
+		log.log(Level.INFO, "Sending bot location message: [sendMyLocationMessage()]");
+		teamComClient.sendToTeam(new LocationMessage(informationBase.getInfo().getLocation(), 
+				informationBase.getInfo().getId(), InfoType.FRIEND));
 	}
 }

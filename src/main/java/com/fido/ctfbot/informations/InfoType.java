@@ -14,36 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
-
-import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+package com.fido.ctfbot.informations;
 
 /**
  *
  * @author Fido
  */
-public class EnemyInfo {
-	private final Player player;
-	
-	private Location lastKnownLocation;
-
-	
-	
-	
-	public Location getLastKnownLocation() {
-		return lastKnownLocation;
-	}
-
-	public void setLastKnownLocation(Location lastKnownLocation) {
-		this.lastKnownLocation = lastKnownLocation;
-	}
-
-	
-	
-
-	public EnemyInfo(Player enemy) {
-		player = enemy;
-	}
-	
+public enum InfoType {
+	FRIEND,
+	ENEMY,
+	ITEM,
+	OUR_FLAG,
+	ENEMY_FLAG
 }

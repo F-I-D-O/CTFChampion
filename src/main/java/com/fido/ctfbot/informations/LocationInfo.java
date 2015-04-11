@@ -14,44 +14,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.messages;
+package com.fido.ctfbot.informations;
 
-import com.fido.ctfbot.Goal;
-import com.fido.ctfbot.informations.players.FriendInfo;
-import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
-import cz.cuni.amis.utils.token.IToken;
-import cz.cuni.amis.utils.token.Tokens;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 
 /**
  *
  * @author Fido
  */
-public class CommandMessage extends Message {
+public abstract class LocationInfo {
 	
-	public static final IToken MESSAGE_TYPE = Tokens.get("Command");
-	
-	private final UnrealId targetPlayerId;
-	
-	private final Goal goal;
-
+	private Location lastKnownPosition;
+    
+    private double lastKnownPositionTime;
 	
 	
-	public UnrealId getTargetPlayerId() {
-		return targetPlayerId;
+	
+	
+	public Location getLastKnownLocation() {
+		return lastKnownPosition;
 	}
 
-	public Goal getGoal() {
-		return goal;
+	public double getLastKnownLocationTime() {
+		return lastKnownPositionTime;
 	}
 
 	
-
-	public CommandMessage(FriendInfo targetPlayer, Goal goal) {
-		super(String.format("Goal: %s was assigned to player %s", goal.toString(), targetPlayer.getName()), 
-				MESSAGE_TYPE);
-		this.targetPlayerId = targetPlayer.getId();
-		this.goal = goal;
+	
+	
+	public LocationInfo(Location lastKnownPosition, double lastKnownPositionTime) {
+		this.lastKnownPosition = lastKnownPosition;
+		this.lastKnownPositionTime = lastKnownPositionTime;
 	}
-
+	
+	
+	
 	
 }

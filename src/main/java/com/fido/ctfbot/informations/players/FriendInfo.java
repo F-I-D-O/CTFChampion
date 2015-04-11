@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.informations;
+package com.fido.ctfbot.informations.players;
 
+import com.fido.ctfbot.informations.players.PlayerInfo;
 import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
@@ -29,10 +30,11 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
  * @author Fido
  */
 public class FriendInfo extends PlayerInfo{
-	private Goal goal;
 	
 	private final AgentInfo info;
-
+	
+	private Goal goal;
+	
 
 	
 
@@ -46,13 +48,19 @@ public class FriendInfo extends PlayerInfo{
 	
 
 	public FriendInfo(Player player, Players players) {
-		super(player, player.getLocation(), players);
+		super(player.getId(), player, player.getLocation(), players);
+		this.info = null;
+		init();
+	}
+	
+	public FriendInfo(UnrealId playerId, Players players) {
+		super(playerId, null, null, players);
 		this.info = null;
 		init();
 	}
 	
 	public FriendInfo(AgentInfo info, Players players) {
-		super(null, info.getLocation(), players);
+		super(info.getId(), null, info.getLocation(), players);
 		this.info = info;
 		init();
 	}
