@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
+package com.fido.ctfbot.informations;
 
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
@@ -27,7 +28,7 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
  *
  * @author Fido
  */
-public class ItemStatistic implements Comparable<ItemStatistic>{
+public class ItemInfo extends Info implements Comparable<ItemInfo>{
 	
 	private static final double STANDARD_RESPAWN_TIME = 27.5;
 	private static final double DOUBLE_RESPAWN_TIME = 55;
@@ -40,6 +41,9 @@ public class ItemStatistic implements Comparable<ItemStatistic>{
 	private final IUT2004Navigation navigation;
 	
 	private final LogCategory log;
+	
+	private final Items items;
+	
 	
 	private final Item item;
 	
@@ -85,30 +89,36 @@ public class ItemStatistic implements Comparable<ItemStatistic>{
 	}
 	
 
-	public ItemStatistic(Item item, FloydWarshallMap fwMap, AgentInfo info, IUT2004Navigation navigation, 
-			LogCategory log) {
+	public ItemInfo(InformationBase informationBase, Item item, FloydWarshallMap fwMap, AgentInfo info, 
+			IUT2004Navigation navigation, LogCategory log) {
+		super(informationBase);
 		this.item = item;
 		this.timeToRespawn = 0;
 		this.fwMap = fwMap;
 		this.info = info;
 		this.navigation = navigation;
 		this.log = log;
+		items = informationBase.getItems();
 	}
 
     @Override
-    public int compareTo(ItemStatistic o) {
+    public int compareTo(ItemInfo o) {
         return (int) Math.round((overallPriority - o.overallPriority) * 10);
     }
 
-	void countDistancePriority() {
+	public void countDistancePriority() {
 		double distance = fwMap.getDistance(info.getNearestNavPoint(), navigation.getNearestNavPoint(item));
 //		log.log(Level.INFO, "Distance to: {0} counted as {1}[countAmountPriority()]", new Object[]{item, distance});
 		distancePriority = 80 / Math.pow((distance / 100), 3);
 	}
 
-	void countOverallPriority(ItemTypeStatistic statisticForItemType) {
+	public void countOverallPriority(ItemTypeInfo statisticForItemType) {
 		double itemTypePriority = statisticForItemType == null ? 0.0 : statisticForItemType.getOverallPriority();
 		overallPriority = itemTypePriority + distancePriority;
+	}
+	
+	public boolean isWorthTakeWhileNavigating(){
+		return items.isPickable(item) && items.isPickupSpawned(item);
 	}
 	
 	

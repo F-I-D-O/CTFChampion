@@ -19,7 +19,12 @@ package com.fido.ctfbot.activities;
 import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
+import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import java.util.logging.Level;
 
 /**
@@ -32,12 +37,23 @@ public class Move extends Activity {
 	
 	private final IUT2004Navigation navigation;
 
+	private final Players players;
 	
+	private final ImprovedShooting shoot;
+	
+	private final WeaponPrefs weaponPrefs;
+	
+	private final AgentInfo info;
+			
 	
 	
 	public Move(InformationBase informationBase, LogCategory log, Location target) {
 		super(informationBase, log);
 		this.navigation = informationBase.getNavigation();
+		this.players = informationBase.getPlayers();
+		this.shoot = informationBase.getShoot();
+		this.weaponPrefs = informationBase.getWeaponPrefs();
+		this.info = informationBase.getInfo();
         
         this.target = target;
 	}
@@ -45,13 +61,26 @@ public class Move extends Activity {
 	@Override
 	public void run() {
 		if(target == null){
-			log.log(Level.WARNING, "Cannot navigate to null target [Move.start()]");
+			log.log(Level.SEVERE, "Cannot navigate to null target [Move.start()]");
 		}
 		
 		// navigovate only if we don't navigating, or we navigating to different target
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(target)){
 			navigation.navigate(target);
 		}
+		
+		if(players.canSeeEnemies()){
+			Player enemy = players.getNearestVisibleEnemy();
+			navigation.setFocus(enemy);
+			shoot.shoot(weaponPrefs, enemy);
+		}
+		else{
+			navigation.setFocus(null);
+			if(info.isShooting()){
+				shoot.stopShooting();
+			}
+		}
+		
 	}
 
 	@Override

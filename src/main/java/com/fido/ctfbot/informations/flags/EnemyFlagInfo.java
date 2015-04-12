@@ -16,6 +16,7 @@
  */
 package com.fido.ctfbot.informations.flags;
 
+import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 
 /**
@@ -24,8 +25,8 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
  */
 public class EnemyFlagInfo extends FlagInfo{
 
-	public EnemyFlagInfo(cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
-		super(flag, lastKnownPosition, lastKnownPositionTime);
+	public EnemyFlagInfo(InformationBase informationBase, cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
+		super(informationBase, flag, lastKnownPosition, lastKnownPositionTime);
 	}
     
     

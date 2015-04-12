@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
+package com.fido.ctfbot.informations;
 
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
@@ -30,7 +30,7 @@ import java.util.logging.Level;
  *
  * @author Fido
  */
-public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
+public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 	
 	public static final int MAX_ARMOR_LOW = 50;
 	public static final int MAX_ARMOR_HIGH = 150;
@@ -39,21 +39,21 @@ public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
 	public static final int MAX_HEALTH_LOW = 100;
 	public static final int MAX_HEALTH_HIGH = 199;
 	
+	/*
+	* static priorities
+	*/
 	public static final Map<UT2004ItemType, Integer> ITEM_TYPE_STATISTIC_PRIORITIES;
 	static {
         HashMap<UT2004ItemType,Integer> map = new HashMap<UT2004ItemType, Integer>();
 		
+		// guns
 		map.put(UT2004ItemType.ASSAULT_RIFLE, 3);
 		map.put(UT2004ItemType.ASSAULT_RIFLE_AMMO, 2);
 		map.put(UT2004ItemType.ASSAULT_RIFLE_GRENADE, 1);
-//		map.put(UT2004ItemType.ASSAULT_RIFLE_PROJECTILE, 0);
 		map.put(UT2004ItemType.BIO_RIFLE, 3);
 		map.put(UT2004ItemType.BIO_RIFLE_AMMO, 3);
-//		map.put(UT2004ItemType.BIO_RIFLE_PROJECTILE, 0);
 		map.put(UT2004ItemType.FLAK_CANNON, 10);
 		map.put(UT2004ItemType.FLAK_CANNON_AMMO, 9);
-//		map.put(UT2004ItemType.FLAK_CANNON_CHUNK, 0);
-//		map.put(UT2004ItemType.FLAK_CANNON_SHELL, 0);
 		map.put(UT2004ItemType.ION_PAINTER, 0);
 		map.put(UT2004ItemType.ION_PAINTER_AMMO, 0);
 		map.put(UT2004ItemType.LIGHTNING_GUN, 6);
@@ -71,7 +71,7 @@ public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
 		map.put(UT2004ItemType.SNIPER_RIFLE, 6);
 		map.put(UT2004ItemType.SHOCK_RIFLE_AMMO, 5);
 		
-
+		// other
         map.put(UT2004ItemType.ADRENALINE_PACK, 0);
 		map.put(UT2004ItemType.HEALTH_PACK, 8);
 		map.put(UT2004ItemType.MINI_HEALTH_PACK, 6);
@@ -91,6 +91,7 @@ public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
 	
 	private final LogCategory log;
 	
+	
 	private boolean isFull;
 	
 	private int amountPriority;
@@ -104,7 +105,6 @@ public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
 	
 	
 	
-	
 	public double getOverallPriority() {
 		return overallPriority;
 	}
@@ -112,8 +112,9 @@ public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
 	
 	
 
-	public ItemTypeStatistic(UT2004ItemType itemType, int staticPriority, Weaponry weaponry, AgentInfo info,
-			LogCategory log) {
+	public ItemTypeInfo(InformationBase informationBase, UT2004ItemType itemType, int staticPriority, Weaponry weaponry,
+			AgentInfo info,	LogCategory log) {
+		super(informationBase);
 		this.itemType = itemType;
 		this.staticPriority = staticPriority;
 		this.isFull = false;
@@ -177,7 +178,7 @@ public class ItemTypeStatistic implements Comparable<ItemTypeStatistic>{
 	}
 
     @Override
-    public int compareTo(ItemTypeStatistic o) {
+    public int compareTo(ItemTypeInfo o) {
         return (int) Math.round((overallPriority - o.overallPriority) * 10);
     }
 	

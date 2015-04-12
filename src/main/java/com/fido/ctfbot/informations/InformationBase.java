@@ -27,17 +27,22 @@ import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -51,7 +56,9 @@ public class InformationBase {
 	public static final int TEAM_SIZE = 3;
 	
 	
-	
+	/*
+	* Pogamut modules
+	*/
 	
 	private final CTFChampion bot;
 	
@@ -71,6 +78,13 @@ public class InformationBase {
 	
 	private final WeaponPrefs weaponPrefs;
 	
+	private final Weaponry weaponry;
+	
+	private final Items items;
+	
+	/*
+	* Other properties
+	*/
 	
 	private final HashMap<UnrealId, FriendInfo> friends;
 	
@@ -79,6 +93,10 @@ public class InformationBase {
 	private final HashMap<UnrealId, PlayerInfo> allPlayersInfo;
 	
 	private final  ArrayList<UnrealId> unidentifiedPlayersIds;
+	
+	private final HashMap<UT2004ItemType, ItemTypeInfo> itemTypeStatistics;
+	
+	private final HashMap<UnrealId, ItemInfo> itemStatistics;
 	
 	private final IPathPlanner mainPathPlanner;
 	
@@ -145,6 +163,10 @@ public class InformationBase {
 	public int getNumberOfNotConnectedPlayers() {
 		return numberOfNotConnectedPlayers;
 	}
+
+	public Items getItems() {
+		return items;
+	}
 	
 	
 	
@@ -155,7 +177,7 @@ public class InformationBase {
 	
 	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctf, IPathPlanner mainPathPlanner,
 			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, 
-			WeaponPrefs weaponPrefs) {
+			WeaponPrefs weaponPrefs, Weaponry weaponry, Items items) {
 		this.log = log;
 		this.bot = bot;
 		this.players = players;
@@ -165,12 +187,17 @@ public class InformationBase {
 		this.navigation = navigation;
 		this.shoot = shoot;
 		this.weaponPrefs = weaponPrefs;
+		this.weaponry = weaponry;
+		this.items = items;
 		
 		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();
 		enemies = new HashMap<UnrealId, EnemyInfo>();
 		allPlayersInfo = new HashMap<UnrealId, PlayerInfo>();
 		unidentifiedPlayersIds = new ArrayList<UnrealId>();
+		itemTypeStatistics = new HashMap<UT2004ItemType, ItemTypeInfo>();
+		initItemTypeInfo();
+		itemStatistics = new HashMap<UnrealId, ItemInfo>();
 	}
 
 	
@@ -219,11 +246,15 @@ public class InformationBase {
 	
 	public void addPlayersAlreadyInGame(){
 		for(Player friend : players.getFriends().values()){
-			friends.put(friend.getId(), new FriendInfo(friend, players));
+			FriendInfo friendInfo = new FriendInfo(friend, players);
+			friends.put(friend.getId(), friendInfo);
+			allPlayersInfo.put(friend.getId(), friendInfo);
 		}
 		
 		for(Player enemy : players.getEnemies().values()){
-			enemies.put(enemy.getId(), new EnemyInfo(enemy, players));
+			EnemyInfo enemyInfo = new EnemyInfo(enemy, players);
+			enemies.put(enemy.getId(), enemyInfo);
+			allPlayersInfo.put(enemy.getId(), enemyInfo);
 		}
 	}
 	
@@ -253,8 +284,8 @@ public class InformationBase {
 	}
 
 	public void initFlags() {
-		ourFlagInfo = new OurFlagInfo(ctf.getOurFlag(), ctf.getOurBase().getLocation(), info.getTime());
-		enemyFlagInfo = new EnemyFlagInfo(ctf.getEnemyFlag(), ctf.getEnemyBase().getLocation(), info.getTime());
+		ourFlagInfo = new OurFlagInfo(this, ctf.getOurFlag(), ctf.getOurBase().getLocation(), info.getTime());
+		enemyFlagInfo = new EnemyFlagInfo(this, ctf.getEnemyFlag(), ctf.getEnemyBase().getLocation(), info.getTime());
 	}
 
 	public void updateFriendLocation(UnrealId unrealId, Location location) {
@@ -296,6 +327,25 @@ public class InformationBase {
 		if(playerInfo != null && playerInfo.getPlayer() == null){
 			playerInfo.connectPlayer(player);
 			numberOfNotConnectedPlayers--;
+		}
+	}
+
+	private void initItemTypeInfo() {
+		for (Map.Entry<UT2004ItemType, Integer> staticPriority : 
+				ItemTypeInfo.ITEM_TYPE_STATISTIC_PRIORITIES.entrySet()) {
+			if(items.getAllItems(staticPriority.getKey()).size() > 0){
+				itemTypeStatistics.put(staticPriority.getKey(), 
+					new ItemTypeInfo(this, staticPriority.getKey(), staticPriority.getValue(), weaponry, info, log));
+			}
+		}
+	}
+
+	public void initItemsInfo() {
+		for (Item item : items.getAllItems().values()) {
+			ItemInfo itemStat = new ItemInfo(this, item, fwMap, info, navigation, log);
+			itemStatistics.put(item.getId(), itemStat);
+//			items.isPickable(item)
+//			log.log(Level.INFO, "item statistic initialized for item{0}", item.getId()); 
 		}
 	}
 	

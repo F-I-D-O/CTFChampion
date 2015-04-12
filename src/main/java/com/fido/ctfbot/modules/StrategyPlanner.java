@@ -79,7 +79,7 @@ public class StrategyPlanner extends CTFChampionModule{
 		if(!strategyApplied){
 			strategyApplied = applyStrategy(nextStrategy);
 			if(!strategyApplied){
-				log.log(Level.INFO, "Applying new strategy wasn't succesful: {0} [applyStrategy()]", nextStrategy);
+				log.log(Level.INFO, "Applying new strategy wasn not succesful: {0} [applyStrategy()]", nextStrategy);
 			}
 		}
 		
@@ -147,7 +147,9 @@ public class StrategyPlanner extends CTFChampionModule{
 
 	private boolean issueCommand(ArrayList<FriendInfo> friends, Goal goal) {
 		for(FriendInfo friend : friends){
-			if(issueCommand(friend, goal)){
+			
+			// if one command issue is not succesfull, we stop issuing other commands
+			if(!issueCommand(friend, goal)){
 				return false;
 			}
 		}

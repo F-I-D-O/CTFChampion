@@ -1,6 +1,8 @@
 package com.fido.ctfbot;
 
 
+import com.fido.ctfbot.informations.ItemInfo;
+import com.fido.ctfbot.informations.ItemTypeInfo;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import com.fido.ctfbot.modules.ComunicationModule;
@@ -9,6 +11,7 @@ import com.fido.ctfbot.modules.ActionPlanner;
 import com.fido.ctfbot.messages.CommandMessage;
 import com.fido.ctfbot.messages.LocationMessage;
 import cz.cuni.amis.introspection.java.JProp;
+import cz.cuni.amis.pogamut.base.agent.module.LogicModule;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
@@ -39,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -79,31 +81,13 @@ public class CTFChampion extends UT2004BotTCController {
 	
 
 	
-	
-	
 	public static LogCategory logStatic;
-	
-	
-	
-
-    // Following properties are exported into "Properties" tab inside NetBeans if you have Pogamut NetBeans plugin installed.
-	// Note that these field must be annotated with @JProp annotations.
-//	@JProp
-//    public String stringProp = "Hello bot example";
-	
-	
+		
 	public Cooldown testHeatup = new Cooldown(10000);
-	
-	
-	
 	
 	private int weaponsPriority;
 	
-    private HashMap<UnrealId, ItemStatistic> itemStatistics;
-	
-	private HashMap<UT2004ItemType, ItemTypeStatistic> itemTypeStatistics;
-	
-	private ArrayList<ItemStatistic> harvestingPriorities;
+	private ArrayList<ItemInfo> harvestingPriorities;
 	
 	private InformationBase informationBase;
 	
@@ -175,6 +159,7 @@ public class CTFChampion extends UT2004BotTCController {
 		   goal = commandMessage.getGoal();
 		   setName("goal just aquired");
 	   }
+	   LogicModule module;
 	   
     }
 	
@@ -195,18 +180,18 @@ public class CTFChampion extends UT2004BotTCController {
 	   
     }
 	
-	@EventListener(eventClass = ItemPickedUp.class)
-	private void OnItemPickedUp(ItemPickedUp event){
-		ItemStatistic itemStat = itemStatistics.get(event.getId());
-		if(itemStat != null){
-			itemStat.restartRespawnTime();
-		}
-		else{
-			log.log(Level.WARNING, "item without statistic picked up: {0}", event.getId()); 
-		}
-		
-		event.getType();
-	}
+//	@EventListener(eventClass = ItemPickedUp.class)
+//	private void OnItemPickedUp(ItemPickedUp event){
+//		ItemInfo itemStat = itemStatistics.get(event.getId());
+//		if(itemStat != null){
+//			itemStat.restartRespawnTime();
+//		}
+//		else{
+//			log.log(Level.WARNING, "item without statistic picked up: {0}", event.getId()); 
+//		}
+//		
+//		event.getType();
+//	}
 	
 	@EventListener(eventClass = PlayerJoinsGame.class)
 	private void OnPlayerJoinsGame(PlayerJoinsGame event){
@@ -217,7 +202,7 @@ public class CTFChampion extends UT2004BotTCController {
 	@EventListener(eventClass = WorldObjectUpdatedEvent.class)
 	private void OnPlayerWorldObjectUpdated(WorldObjectUpdatedEvent event){
 		if(event.getObject() instanceof Player){
-			if(!allPlayersConnectedToInformationBase){
+			if(allBotsInGame && !allPlayersConnectedToInformationBase){
 				informationBase.tryConnectPlayer((Player) event.getObject());
 				
 				if(informationBase.getNumberOfNotConnectedPlayers() == 0){
@@ -240,15 +225,6 @@ public class CTFChampion extends UT2004BotTCController {
 		System.out.println("prepareBot start"); 
 		
 		mainPathPlanner = fwMap;
-		
-		itemStatistics = new HashMap<UnrealId, ItemStatistic>();
-		
-		itemTypeStatistics = new HashMap<UT2004ItemType, ItemTypeStatistic>();
-		for (Map.Entry<UT2004ItemType, Integer> staticPriority : 
-				ItemTypeStatistic.ITEM_TYPE_STATISTIC_PRIORITIES.entrySet()) {
-			itemTypeStatistics.put(staticPriority.getKey(), 
-					new ItemTypeStatistic(staticPriority.getKey(), staticPriority.getValue(), weaponry, info, log));
-		}
 		
 		ititWeaponPreferences();
 		
@@ -287,11 +263,7 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		CTFChampion.logStatic = log;
 		
-		for (Item item : items.getAllItems().values()) {
-			ItemStatistic itemStat = new ItemStatistic(item, fwMap, info, navigation, log);
-			itemStatistics.put(item.getId(), itemStat);
-//			log.log(Level.INFO, "item statistic initialized for item{0}", item.getId()); 
-		}
+		informationBase.initItemsInfo();
 		
 		log.info("botInitialized end"); 
     }
@@ -419,7 +391,7 @@ public class CTFChampion extends UT2004BotTCController {
     
 
     public Item getTargetItem() {
-		Iterator<ItemStatistic> iterator = harvestingPriorities.listIterator();
+		Iterator<ItemInfo> iterator = harvestingPriorities.listIterator();
 		
 		if(iterator.hasNext()){
 			return iterator.next().getItem();
@@ -466,16 +438,6 @@ public class CTFChampion extends UT2004BotTCController {
 		}
 		log.log(Level.INFO, "Deal with enemies end [dealWithEnemis()]");
 	}
-	
-	
-	
-	private void takeNonEnemyAction(){
-//		shoot.stopShooting();
-		
-//		if(!navigation.isNavigating()){
-			searchForUsefullObject();
-//		}
-	}
 
 	public boolean searchForUsefullObject() {
 		log.log(Level.INFO, "Searching of usefull objects start [searchForUsefullObject()]");
@@ -492,11 +454,11 @@ public class CTFChampion extends UT2004BotTCController {
 		return true;
 	}
 
-	private void decreaseRespawnTimes() {
-		for (ItemStatistic itemStatistic : itemStatistics.values()) {
-			itemStatistic.decreaseRespawnTime();
-		}
-	}
+//	private void decreaseRespawnTimes() {
+//		for (ItemInfo itemStatistic : itemStatistics.values()) {
+//			itemStatistic.decreaseRespawnTime();
+//		}
+//	}
 
 	private void ititWeaponPreferences() {
 		initGeneralWeaponPreferences();
@@ -559,46 +521,46 @@ public class CTFChampion extends UT2004BotTCController {
 		return 10;
 	}
 
-	private void callculateHarvestingPriority() {
-        for (ItemTypeStatistic itemTypeStatistic : itemTypeStatistics.values()) {
-            itemTypeStatistic.countAmountPriority();
-            itemTypeStatistic.countOverallPriority();
-        }
-		
-		
-		harvestingPriorities = new ArrayList<ItemStatistic>(itemStatistics.values());
-		
-		Iterator<ItemStatistic> iterator = harvestingPriorities.iterator();
-		while (iterator.hasNext()) {
-			ItemStatistic harvestingPriority = iterator.next(); 
-		  
-			// ze seznamu priorit zcela vyřadíme věci které nemůžemne sebrat, 
-			if(!items.isPickable(harvestingPriority.getItem()) || 
-					// které jsou nedosažitelné
-					!fwMap.reachable(info.getNearestNavPoint(), 
-							navigation.getNearestNavPoint(harvestingPriority.getItem())) ||
-					// nebo které ještě nejsou respawnované               
-					harvestingPriority.getTimeToRespawn() != 0){
-				iterator.remove();
-			}
-			else {
-				ItemTypeStatistic statisticForItemType = itemTypeStatistics.get(harvestingPriority.getItem().getType());
-				harvestingPriority.countDistancePriority();
-				// předměty, ke kterým nebudeme znát typ, budou mít nulovou prioritu
-				
-				harvestingPriority.countOverallPriority(statisticForItemType);
-			}
-		}
-		
-        Collections.sort(harvestingPriorities, Collections.reverseOrder());
-	}
+//	private void callculateHarvestingPriority() {
+//        for (ItemTypeInfo itemTypeStatistic : itemTypeStatistics.values()) {
+//            itemTypeStatistic.countAmountPriority();
+//            itemTypeStatistic.countOverallPriority();
+//        }
+//		
+//		
+//		harvestingPriorities = new ArrayList<ItemInfo>(itemStatistics.values());
+//		
+//		Iterator<ItemInfo> iterator = harvestingPriorities.iterator();
+//		while (iterator.hasNext()) {
+//			ItemInfo harvestingPriority = iterator.next(); 
+//		  
+//			// ze seznamu priorit zcela vyřadíme věci které nemůžemne sebrat, 
+//			if(!items.isPickable(harvestingPriority.getItem()) || 
+//					// které jsou nedosažitelné
+//					!fwMap.reachable(info.getNearestNavPoint(), 
+//							navigation.getNearestNavPoint(harvestingPriority.getItem())) ||
+//					// nebo které ještě nejsou respawnované               
+//					harvestingPriority.getTimeToRespawn() != 0){
+//				iterator.remove();
+//			}
+//			else {
+//				ItemTypeInfo statisticForItemType = itemTypeStatistics.get(harvestingPriority.getItem().getType());
+//				harvestingPriority.countDistancePriority();
+//				// předměty, ke kterým nebudeme znát typ, budou mít nulovou prioritu
+//				
+//				harvestingPriority.countOverallPriority(statisticForItemType);
+//			}
+//		}
+//		
+//        Collections.sort(harvestingPriorities, Collections.reverseOrder());
+//	}
 
 	/**
 	 * Initialize bot modules
 	 */
 	private void initializeModules() {
 		informationBase = new InformationBase(this, log, players, ctf, mainPathPlanner, info, fwMap, navigation, shoot,
-			weaponPrefs);
+			weaponPrefs, weaponry, items);
 		
 		comunicationModule = new ComunicationModule(this, log, tcClient, informationBase);
 		
