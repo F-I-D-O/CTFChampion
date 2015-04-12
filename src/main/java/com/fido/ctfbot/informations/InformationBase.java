@@ -18,6 +18,7 @@ package com.fido.ctfbot.informations;
 
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.ItemDistanceComparator;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
@@ -31,6 +32,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
@@ -38,6 +40,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallM
 import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,6 +85,8 @@ public class InformationBase {
 	
 	private final Items items;
 	
+	private final NavPoints navPoints;
+	
 	/*
 	* Other properties
 	*/
@@ -98,6 +103,12 @@ public class InformationBase {
 	
 	private final HashMap<UnrealId, ItemInfo> itemStatistics;
 	
+	private final RecentSpotedItems recentSpotedItems;
+	
+	private final ItemDistanceComparator itemDistanceComparator;
+	
+	
+	
 	private final IPathPlanner mainPathPlanner;
 	
 	private OurFlagInfo ourFlagInfo;
@@ -108,9 +119,7 @@ public class InformationBase {
 	
 	
 	
-	
-	
-	
+		
 
 	public CTFChampion getBot() {
 		return bot;
@@ -167,6 +176,18 @@ public class InformationBase {
 	public Items getItems() {
 		return items;
 	}
+
+	public RecentSpotedItems getRecentSpotedItems() {
+		return recentSpotedItems;
+	}
+
+	public FloydWarshallMap getFwMap() {
+		return fwMap;
+	}
+
+	public ItemDistanceComparator getItemDistanceComparator() {
+		return itemDistanceComparator;
+	}
 	
 	
 	
@@ -177,7 +198,7 @@ public class InformationBase {
 	
 	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctf, IPathPlanner mainPathPlanner,
 			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, 
-			WeaponPrefs weaponPrefs, Weaponry weaponry, Items items) {
+			WeaponPrefs weaponPrefs, Weaponry weaponry, Items items, NavPoints navPoints) {
 		this.log = log;
 		this.bot = bot;
 		this.players = players;
@@ -189,6 +210,7 @@ public class InformationBase {
 		this.weaponPrefs = weaponPrefs;
 		this.weaponry = weaponry;
 		this.items = items;
+		this.navPoints = navPoints;
 		
 		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();
@@ -198,6 +220,8 @@ public class InformationBase {
 		itemTypeStatistics = new HashMap<UT2004ItemType, ItemTypeInfo>();
 		initItemTypeInfo();
 		itemStatistics = new HashMap<UnrealId, ItemInfo>();
+		recentSpotedItems = new RecentSpotedItems(this);
+		itemDistanceComparator = new ItemDistanceComparator(this);
 	}
 
 	
@@ -348,7 +372,17 @@ public class InformationBase {
 //			log.log(Level.INFO, "item statistic initialized for item{0}", item.getId()); 
 		}
 	}
+
+	public ItemInfo getItemInfo(Item item) {
+		return itemStatistics.get(item.getId());
+	}
 	
-	
+	public NavPoint getNearestNavpoint(Location location){
+		return navPoints.getNearestNavPoint(location);
+	}
+
+	public NavPoint getItemNavPoint(Object item1) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 	
 }

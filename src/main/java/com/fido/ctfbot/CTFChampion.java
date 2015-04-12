@@ -19,6 +19,7 @@ import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base.utils.math.DistanceUtils;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
+import cz.cuni.amis.pogamut.base3d.worldview.object.event.WorldObjectAppearedEvent;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.visibility.model.VisibilityLocation;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004Bot;
@@ -192,6 +193,15 @@ public class CTFChampion extends UT2004BotTCController {
 //		
 //		event.getType();
 //	}
+	
+	@EventListener(eventClass = WorldObjectAppearedEvent.class)
+	private void OnPlayerJoinsGame(WorldObjectAppearedEvent event){
+		if(event.getObject() instanceof Item){
+			Item item = (Item) event.getObject();
+			informationBase.getRecentSpotedItems().addItem(item);
+			log.log(Level.INFO, "Item {0} appeard", item.getType()); 
+		}
+	}
 	
 	@EventListener(eventClass = PlayerJoinsGame.class)
 	private void OnPlayerJoinsGame(PlayerJoinsGame event){
@@ -560,7 +570,7 @@ public class CTFChampion extends UT2004BotTCController {
 	 */
 	private void initializeModules() {
 		informationBase = new InformationBase(this, log, players, ctf, mainPathPlanner, info, fwMap, navigation, shoot,
-			weaponPrefs, weaponry, items);
+			weaponPrefs, weaponry, items, navPoints);
 		
 		comunicationModule = new ComunicationModule(this, log, tcClient, informationBase);
 		
