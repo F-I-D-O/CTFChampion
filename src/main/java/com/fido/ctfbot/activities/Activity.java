@@ -29,12 +29,15 @@ public abstract class Activity {
 	protected final InformationBase informationBase;
 	
 	protected final LogCategory log;
+	
+	protected final ICaller caller;
 
 	
 	
-	public Activity(InformationBase informationBase, LogCategory log) {
+	public Activity(InformationBase informationBase, LogCategory log, ICaller caller) {
 		this.informationBase = informationBase;
 		this.log = log;
+		this.caller = caller;
 	}
 	
 	

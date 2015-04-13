@@ -127,6 +127,9 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 	}
 
 	public void countOverallPriority(ItemTypeInfo statisticForItemType) {
+		countDistancePriority();
+		
+		// null priority for items with unknown item type
 		double itemTypePriority = statisticForItemType == null ? 0.0 : statisticForItemType.getOverallPriority();
 		overallPriority = itemTypePriority + distancePriority;
 	}

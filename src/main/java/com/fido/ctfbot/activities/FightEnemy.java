@@ -52,12 +52,13 @@ public class FightEnemy extends Activity {
 	
 	
 	/**
-     * Constructor with no enemy. Nerest enemz will be choses
+     * Constructor with no enemy. Nearest enemy will be chosen
      * @param informationBase
      * @param log 
+	 * @param caller 
      */
-	public FightEnemy(InformationBase informationBase, LogCategory log) {
-		super(informationBase, log);
+	public FightEnemy(InformationBase informationBase, LogCategory log, ICaller caller) {
+		super(informationBase, log, caller);
 		players = informationBase.getPlayers();
 		navigation = informationBase.getNavigation();
 		shoot = informationBase.getShoot();
@@ -65,8 +66,9 @@ public class FightEnemy extends Activity {
         chosenEmemy = players.getNearestVisibleEnemy();
 	}
     
-    public FightEnemy(InformationBase informationBase, LogCategory log, Player enemy) {
-		super(informationBase, log);
+    public FightEnemy(InformationBase informationBase, LogCategory log, ICaller caller,
+			Player enemy) {
+		super(informationBase, log, caller);
 		players = informationBase.getPlayers();
 		navigation = informationBase.getNavigation();
 		shoot = informationBase.getShoot();

@@ -219,6 +219,26 @@ public class CTFChampion extends UT2004BotTCController {
 		}
 	}
 	
+	 /**
+     * Called each time the bot dies. Good for reseting all bot's state
+     * dependent variables.
+     *
+     * @param event
+     */
+    @Override
+    public void botKilled(BotKilled event) {
+        // Uncomment this line to have the bot comment on its death.
+        //sayGlobal("I was KILLED!");
+    }
+    
+    @EventListener(eventClass=BotDamaged.class)
+    public void botDamaged(BotDamaged event) {
+    	// Uncomment this line to gain information about damage the bot receives
+    	//sayGlobal("GOT DAMAGE: " + event.getDamage() + ", HEALTH: " + info.getHealth());
+    	// Notice that "HEALTH" does not fully match the damage received, because "HEALTH" is updated periodically
+    	// but BotDamaged message comes as event, therefore the "HEALTH" number lags behind a bit (250ms at max)
+    }
+	
 	
 
     /**
@@ -326,26 +346,6 @@ public class CTFChampion extends UT2004BotTCController {
     	log.info(msg);
     }
     
-    /**
-     * Called each time the bot dies. Good for reseting all bot's state
-     * dependent variables.
-     *
-     * @param event
-     */
-    @Override
-    public void botKilled(BotKilled event) {
-        // Uncomment this line to have the bot comment on its death.
-        //sayGlobal("I was KILLED!");
-    }
-    
-    @EventListener(eventClass=BotDamaged.class)
-    public void botDamaged(BotDamaged event) {
-    	// Uncomment this line to gain information about damage the bot receives
-    	//sayGlobal("GOT DAMAGE: " + event.getDamage() + ", HEALTH: " + info.getHealth());
-    	// Notice that "HEALTH" does not fully match the damage received, because "HEALTH" is updated periodically
-    	// but BotDamaged message comes as event, therefore the "HEALTH" number lags behind a bit (250ms at max)
-    }
-
     int num;
     
     /**
@@ -526,46 +526,14 @@ public class CTFChampion extends UT2004BotTCController {
 		return 10;
 	}
 
-//	private void callculateHarvestingPriority() {
-//        for (ItemTypeInfo itemTypeStatistic : itemTypeStatistics.values()) {
-//            itemTypeStatistic.countAmountPriority();
-//            itemTypeStatistic.countOverallPriority();
-//        }
-//		
-//		
-//		harvestingPriorities = new ArrayList<ItemInfo>(itemStatistics.values());
-//		
-//		Iterator<ItemInfo> iterator = harvestingPriorities.iterator();
-//		while (iterator.hasNext()) {
-//			ItemInfo harvestingPriority = iterator.next(); 
-//		  
-//			// ze seznamu priorit zcela vyřadíme věci které nemůžemne sebrat, 
-//			if(!items.isPickable(harvestingPriority.getItem()) || 
-//					// které jsou nedosažitelné
-//					!fwMap.reachable(info.getNearestNavPoint(), 
-//							navigation.getNearestNavPoint(harvestingPriority.getItem())) ||
-//					// nebo které ještě nejsou respawnované               
-//					harvestingPriority.getTimeToRespawn() != 0){
-//				iterator.remove();
-//			}
-//			else {
-//				ItemTypeInfo statisticForItemType = itemTypeStatistics.get(harvestingPriority.getItem().getType());
-//				harvestingPriority.countDistancePriority();
-//				// předměty, ke kterým nebudeme znát typ, budou mít nulovou prioritu
-//				
-//				harvestingPriority.countOverallPriority(statisticForItemType);
-//			}
-//		}
-//		
-//        Collections.sort(harvestingPriorities, Collections.reverseOrder());
-//	}
+	
 
 	/**
 	 * Initialize bot modules
 	 */
 	private void initializeModules() {
 		informationBase = new InformationBase(this, log, players, ctf, mainPathPlanner, info, fwMap, navigation, shoot,
-			weaponPrefs, weaponry, items, navPoints);
+			weaponPrefs, weaponry, items, navPoints, game);
 		
 		comunicationModule = new ComunicationModule(this, log, tcClient, informationBase);
 		
@@ -600,7 +568,7 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		// there we expecttwo teams and human player as observer.
 		if(informationBase.getFriends().size() + informationBase.getEnemies().size() == 
-				InformationBase.TEAM_SIZE * 2 + 1){
+				InformationBase.TEAM_SIZE  + 1){
 			allBotsInGame = true;
 			return true;
 		}

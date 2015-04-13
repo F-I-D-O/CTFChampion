@@ -19,6 +19,7 @@ package com.fido.ctfbot.informations;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import java.util.Collections;
@@ -91,6 +92,8 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 	
 	private final LogCategory log;
 	
+	private final Game game;
+	
 	
 	private boolean isFull;
 	
@@ -113,18 +116,19 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 	
 
 	public ItemTypeInfo(InformationBase informationBase, UT2004ItemType itemType, int staticPriority, Weaponry weaponry,
-			AgentInfo info,	LogCategory log) {
+			AgentInfo info,	LogCategory log, Game game) {
 		super(informationBase);
 		this.itemType = itemType;
 		this.staticPriority = staticPriority;
 		this.isFull = false;
 		this.amountPriority = 10;
 		this.weaponry = weaponry;
+		this.game = game;
 		this.info = info;
 		this.log = log;
 	}
 	
-	public void countAmountPriority(){
+	private void countAmountPriority(){
 		int currentAmount = 0;
 		int maxAmount = 1;
 		if(itemType.getCategory() == ItemType.Category.WEAPON){
@@ -139,16 +143,16 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 		else if(itemType.getCategory() == ItemType.Category.ARMOR){
 			if(itemType == UT2004ItemType.SHIELD_PACK){
 				currentAmount = info.getLowArmor();
-				maxAmount = Math.min(MAX_ARMOR_LOW, MAX_ARMOR_TOTAL - info.getHighArmor());
+				maxAmount = game.getMaxArmor();
 			}
 			else {	
 				currentAmount = info.getHighArmor();
-				maxAmount = Math.min(MAX_ARMOR_LOW, MAX_ARMOR_TOTAL - info.getLowArmor());
+				maxAmount = game.getMaxHighArmor();
 			}
 		}
 		else if(itemType.getCategory() == ItemType.Category.HEALTH){
 			currentAmount =info.getHealth();
-			maxAmount = itemType == UT2004ItemType.HEALTH_PACK ? MAX_HEALTH_LOW : MAX_HEALTH_HIGH;
+			maxAmount = itemType == UT2004ItemType.HEALTH_PACK ? game.getFullHealth() : game.getMaxHealth();
 		}
 		else{
 			log.log(Level.INFO, "Item with not implemented category {0} [countAmountPriority()]", 
@@ -158,23 +162,23 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 		float amountRatio;
 		
 		// kvůli chybě se sniperkou
-		if(maxAmount < 1){
-			log.log(Level.WARNING, "Item with max amount less than zero. Item: {0}, Amount {1}[countAmountPriority()]", 
-					new Object[]{itemType, maxAmount});
-			currentAmount = weaponry.getAmmo(itemType);
-//			System.exit(-1);
-			amountRatio = 1000;
-		}
-		else{
+//		if(maxAmount < 1){
+//			log.log(Level.WARNING, "Item with max amount less than zero. Item: {0}, Amount {1}[countAmountPriority()]", 
+//					new Object[]{itemType, maxAmount});
+//			currentAmount = weaponry.getAmmo(itemType);
+////			System.exit(-1);
+//			amountRatio = 1000;
+//		}
+//		else{
 			amountRatio = currentAmount / maxAmount;
-		}
+//		}
 		isFull = amountRatio == 1;
 		amountPriority = 10 - Math.round(amountRatio * 10);
 	}
 	
 	public void countOverallPriority(){
-//		overallPriority = staticPriority + amountPriority;
-		overallPriority = staticPriority;
+		countAmountPriority();
+		overallPriority = staticPriority + amountPriority;
 	}
 
     @Override

@@ -80,7 +80,7 @@ public abstract class PlayerInfo {
 		}
 		// return exact location
 		else{
-			return player.getLocation();
+			return players.getVisiblePlayer(playerId).getLocation();
 		}
 	}
 	

@@ -41,14 +41,10 @@ import java.util.logging.Level;
  */
 public class Move extends Activity implements FlagListener<NavigationState> {
 	
-	private static final double MAX_DISTANCE_INCREASE = 200;
+	private static final double MAX_DISTANCE_INCREASE = 500;
 	
 	
 	
-	
-	private Location currentTarget;
-
-	private Location mainTarget;
 	
 	private final IUT2004Navigation navigation;
 
@@ -63,13 +59,21 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	private final FloydWarshallMap fwMap;
 	
 	
+	
+	private final Location mainTarget;
+	
 	private final RecentSpotedItems recentSpotedItems;
+	
+	
+	private Location currentTarget;
+	
+	private boolean currentTargetReached = false;
 	
 			
 	
 	
-	public Move(InformationBase informationBase, LogCategory log, Location target) {
-		super(informationBase, log);
+	public Move(InformationBase informationBase, LogCategory log, ICaller caller, Location target) {
+		super(informationBase, log, caller);
 		this.navigation = informationBase.getNavigation();
 		this.players = informationBase.getPlayers();
 		this.shoot = informationBase.getShoot();
@@ -97,6 +101,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		// navigovate only if we don't navigating, or we navigating to different target
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(currentTarget)){
 			navigation.navigate(currentTarget);
+			currentTargetReached = false;
 		}
 		
 		if(players.canSeeEnemies()){
@@ -120,7 +125,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 
 	@Override
 	protected boolean activityParametrsEquals(Object obj) {
-		return currentTarget.equals(((Move) obj).currentTarget);
+		return mainTarget.equals(((Move) obj).mainTarget);
 	}
 
 	private void tryToRecountPathAcrossItems() {
@@ -135,9 +140,10 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	
 			if(isWorthTaking){
 				NavPoint itemNavPoint = 
-						itemInfo == null ? informationBase.getNearestNavpoint(item.getLocation()) : item.getNavPoint();
+						itemInfo == null ? 
+						informationBase.getNavigationUtils().getNearestNavpoint(item.getLocation()) : item.getNavPoint();
 
-				NavPoint targetNavPoint = informationBase.getNearestNavpoint(currentTarget);
+				NavPoint targetNavPoint = informationBase.getNavigationUtils().getNearestNavpoint(currentTarget);
 				
 				double distanceToItem = fwMap.getDistance(info.getNearestNavPoint(), itemNavPoint);
 				double distanceFromItem = fwMap.getDistance(itemNavPoint, targetNavPoint);
@@ -159,20 +165,32 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 				log.log(Level.WARNING, "We are stucked [Move.flagChanged()]");
 				break;
 			case STOPPED:
+				log.log(Level.WARNING, "Stopped [Move.flagChanged()]");
 				break;
 			case TARGET_REACHED:
-				if(currentTarget == mainTarget){
-					
-				}
-				else {
-					currentTarget = mainTarget;
-				}
+				handleTargetReached();
 				break;
 			case PATH_COMPUTATION_FAILED:
 				log.log(Level.WARNING, "Path computation failed [Move.flagChanged()]");
 				break;
 			case NAVIGATING:
+				log.log(Level.WARNING, "Navigating [Move.flagChanged()]");
 				break;
+		}
+	}
+
+	private void handleTargetReached() {
+		// we do something only when notification is aquired for the first time
+		if(!currentTargetReached){
+			currentTargetReached = true;
+			if(currentTarget == mainTarget){
+				log.log(Level.INFO, "Main target reached [Move.flagChanged()]");
+				caller.childActivityFinished();
+			}
+			else {
+				log.log(Level.INFO, "Temporary target reached [Move.flagChanged()]");
+				currentTarget = mainTarget;
+			}
 		}
 	}
 	

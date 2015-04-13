@@ -19,6 +19,7 @@ package com.fido.ctfbot.informations;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.ItemDistanceComparator;
+import com.fido.ctfbot.NavigationUtils;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
@@ -31,6 +32,7 @@ import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
@@ -58,6 +60,7 @@ public class InformationBase {
 	
 	public static final int TEAM_SIZE = 3;
 	
+	private static final double BASE_SIZE = 1000;
 	
 	/*
 	* Pogamut modules
@@ -87,9 +90,18 @@ public class InformationBase {
 	
 	private final NavPoints navPoints;
 	
+	private final Game game;
+	
 	/*
 	* Other properties
 	*/
+	
+	/* submodules */
+	
+	private final NavigationUtils navigationUtils;
+	
+	
+	/* collections */
 	
 	private final HashMap<UnrealId, FriendInfo> friends;
 	
@@ -99,15 +111,16 @@ public class InformationBase {
 	
 	private final  ArrayList<UnrealId> unidentifiedPlayersIds;
 	
-	private final HashMap<UT2004ItemType, ItemTypeInfo> itemTypeStatistics;
+	private final HashMap<UT2004ItemType, ItemTypeInfo> itemTypeInfo;
 	
-	private final HashMap<UnrealId, ItemInfo> itemStatistics;
+	private final HashMap<UnrealId, ItemInfo> itemsInfo;
 	
 	private final RecentSpotedItems recentSpotedItems;
 	
 	private final ItemDistanceComparator itemDistanceComparator;
 	
 	
+	/* other */
 	
 	private final IPathPlanner mainPathPlanner;
 	
@@ -188,6 +201,19 @@ public class InformationBase {
 	public ItemDistanceComparator getItemDistanceComparator() {
 		return itemDistanceComparator;
 	}
+
+	public NavigationUtils getNavigationUtils() {
+		return navigationUtils;
+	}
+
+	public HashMap<UT2004ItemType, ItemTypeInfo> getItemTypeInfo() {
+		return itemTypeInfo;
+	}
+
+	public HashMap<UnrealId, ItemInfo> getItemsInfo() {
+		return itemsInfo;
+	}
+	
 	
 	
 	
@@ -198,7 +224,7 @@ public class InformationBase {
 	
 	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctf, IPathPlanner mainPathPlanner,
 			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, 
-			WeaponPrefs weaponPrefs, Weaponry weaponry, Items items, NavPoints navPoints) {
+			WeaponPrefs weaponPrefs, Weaponry weaponry, Items items, NavPoints navPoints, Game game) {
 		this.log = log;
 		this.bot = bot;
 		this.players = players;
@@ -211,17 +237,19 @@ public class InformationBase {
 		this.weaponry = weaponry;
 		this.items = items;
 		this.navPoints = navPoints;
+		this.game = game;
 		
         ItemInfo.setInfo(items);
         
+		navigationUtils = new NavigationUtils(fwMap, navPoints);
 		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();
 		enemies = new HashMap<UnrealId, EnemyInfo>();
 		allPlayersInfo = new HashMap<UnrealId, PlayerInfo>();
 		unidentifiedPlayersIds = new ArrayList<UnrealId>();
-		itemTypeStatistics = new HashMap<UT2004ItemType, ItemTypeInfo>();
+		itemTypeInfo = new HashMap<UT2004ItemType, ItemTypeInfo>();
 		initItemTypeInfo();
-		itemStatistics = new HashMap<UnrealId, ItemInfo>();
+		itemsInfo = new HashMap<UnrealId, ItemInfo>();
 		recentSpotedItems = new RecentSpotedItems(this);
 		itemDistanceComparator = new ItemDistanceComparator(this);
 	}
@@ -360,8 +388,8 @@ public class InformationBase {
 		for (Map.Entry<UT2004ItemType, Integer> staticPriority : 
 				ItemTypeInfo.ITEM_TYPE_STATISTIC_PRIORITIES.entrySet()) {
 			if(items.getAllItems(staticPriority.getKey()).size() > 0){
-				itemTypeStatistics.put(staticPriority.getKey(), 
-					new ItemTypeInfo(this, staticPriority.getKey(), staticPriority.getValue(), weaponry, info, log));
+				itemTypeInfo.put(staticPriority.getKey(), 
+					new ItemTypeInfo(this, staticPriority.getKey(), staticPriority.getValue(), weaponry, info, log, game));
 			}
 		}
 	}
@@ -369,23 +397,41 @@ public class InformationBase {
 	public void initItemsInfo() {
 		for (Item item : items.getAllItems().values()) {
 			ItemInfo itemStat = new ItemInfo(this, item, fwMap, info, navigation, log);
-			itemStatistics.put(item.getId(), itemStat);
+			itemsInfo.put(item.getId(), itemStat);
 //			items.isPickable(item)
 //			log.log(Level.INFO, "item statistic initialized for item{0}", item.getId()); 
 		}
 	}
 
 	public ItemInfo getItemInfo(Item item) {
-		return itemStatistics.get(item.getId());
+		return itemsInfo.get(item.getId());
 	}
 	
-	public NavPoint getNearestNavpoint(Location location){
-		return navPoints.getNearestNavPoint(location);
-	}
-
 	public NavPoint getItemNavPoint(Object itemObject) {
         Item item = (Item) itemObject;
-		return itemStatistics.get(item.getId()) == null ? getNearestNavpoint(item.getLocation()) : item.getNavPoint();
+		return itemsInfo.get(item.getId()) == null ? 
+				navigationUtils.getNearestNavpoint(item.getLocation()) : item.getNavPoint();
+	}
+
+	public boolean AmIInOurBase() {
+		return isInOurBase(info.getLocation());
+	}
+	
+	public EnemyInfo getEnemyInOurBase() {
+		for (EnemyInfo enemyInfo : enemies.values()) {
+			if(isInOurBase(enemyInfo.getBestLocation())){
+				return enemyInfo;
+			}
+		}
+		return null;
+	}
+	
+	public boolean isInOurBase(Location location){
+		return navigationUtils.getDistance(location, ctf.getOurBase().getLocation()) < BASE_SIZE;
+	}
+	
+	public boolean isReachable(NavPoint navPoint) {
+		return navigationUtils.pathExist(navigationUtils.getNearestNavpoint(info.getLocation()), navPoint);
 	}
 	
 }
