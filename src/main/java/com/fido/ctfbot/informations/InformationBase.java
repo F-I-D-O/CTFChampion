@@ -212,6 +212,8 @@ public class InformationBase {
 		this.items = items;
 		this.navPoints = navPoints;
 		
+        ItemInfo.setInfo(items);
+        
 		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();
 		enemies = new HashMap<UnrealId, EnemyInfo>();
@@ -381,8 +383,9 @@ public class InformationBase {
 		return navPoints.getNearestNavPoint(location);
 	}
 
-	public NavPoint getItemNavPoint(Object item1) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	public NavPoint getItemNavPoint(Object itemObject) {
+        Item item = (Item) itemObject;
+		return itemStatistics.get(item.getId()) == null ? getNearestNavpoint(item.getLocation()) : item.getNavPoint();
 	}
 	
 }

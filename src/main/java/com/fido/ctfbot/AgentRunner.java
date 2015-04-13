@@ -50,9 +50,9 @@ public class AgentRunner {
 //		br.startAgents(3).;          // tells the runner to start 1 agent
 		
 		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost("localhost").setPort(3000).setLogLevel(Level.WARNING).startAgents(
-                new UT2004BotParameters().setTeam(0),
-                new UT2004BotParameters().setTeam(0),
-				new UT2004BotParameters().setTeam(0),
+//                new UT2004BotParameters().setTeam(0),
+//                new UT2004BotParameters().setTeam(0),
+//				new UT2004BotParameters().setTeam(0)
                 
                 new UT2004BotParameters().setTeam(1),
                 new UT2004BotParameters().setTeam(1),

@@ -2,7 +2,6 @@ package com.fido.ctfbot;
 
 
 import com.fido.ctfbot.informations.ItemInfo;
-import com.fido.ctfbot.informations.ItemTypeInfo;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import com.fido.ctfbot.modules.ComunicationModule;
@@ -20,7 +19,6 @@ import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base.utils.math.DistanceUtils;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.event.WorldObjectAppearedEvent;
-import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.visibility.model.VisibilityLocation;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004Bot;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
@@ -32,7 +30,6 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.ConfigC
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.GameInfo;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.InitedMessage;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.ItemPickedUp;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.PlayerJoinsGame;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Self;
@@ -40,8 +37,6 @@ import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004BotTCController;
 import cz.cuni.amis.utils.Cooldown;
 import cz.cuni.amis.utils.exception.PogamutException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 

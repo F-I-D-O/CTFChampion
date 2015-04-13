@@ -18,6 +18,7 @@ package com.fido.ctfbot.informations;
 
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 /**
@@ -56,8 +57,8 @@ public class RecentSpotedItems {
 	}
 
 	public synchronized ArrayList<Item> getAllSorted() {
-		spotedItems.sort(informationBase.getItemDistanceComparator());
-		return spotedItems;
+        Collections.sort(spotedItems, informationBase.getItemDistanceComparator());
+        return new ArrayList<Item>(spotedItems);
 	}
 	
 	public synchronized void remove(Item item){

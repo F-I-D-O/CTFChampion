@@ -33,10 +33,17 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 	private static final double STANDARD_RESPAWN_TIME = 27.5;
 	private static final double DOUBLE_RESPAWN_TIME = 55;
 	private static final double TRIPLE_RESPAWN_TIME = 82;
-
+    
+    private static Items items;
+    
+    
 	public static boolean isWorthTakeWhileNavigating(Item item) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return items.isPickable(item) && items.isPickupSpawned(item);
 	}
+
+    public static void setInfo(Items items) {
+       ItemInfo.items = items;
+    }
 	
 	
 	
@@ -49,7 +56,7 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 	
 	private final LogCategory log;
 	
-	private final Items items;
+//	private final Items items;
 	
 	
 	private final Item item;

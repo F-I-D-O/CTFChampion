@@ -99,8 +99,6 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			navigation.navigate(currentTarget);
 		}
 		
-
-		
 		if(players.canSeeEnemies()){
 			Player enemy = players.getNearestVisibleEnemy();
 			navigation.setFocus(enemy);
