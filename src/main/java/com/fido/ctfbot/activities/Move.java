@@ -90,7 +90,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	@Override
 	public void run() {
 		if(currentTarget == null){
-			log.log(Level.SEVERE, "Cannot navigate to null target [Move.start()]");
+			log.log(Level.SEVERE, "Cannot navigate to null target [Move.run()]");
 		}
 		
 		// try to recount the path across newly spoted items
@@ -100,8 +100,10 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		
 		// navigovate only if we don't navigating, or we navigating to different target
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(currentTarget)){
+			log.log(Level.INFO, "It's necessary to change the target [Move.run()]");
 			navigation.navigate(currentTarget);
 			currentTargetReached = false;
+			log.log(Level.INFO, "Target changed [Move.run()]");
 		}
 		
 		if(players.canSeeEnemies()){
@@ -121,6 +123,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	@Override
 	protected void close() {
 		navigation.stopNavigation();
+		navigation.removeStrongNavigationListener(this);
 	}
 
 	@Override
@@ -129,6 +132,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	}
 
 	private void tryToRecountPathAcrossItems() {
+		log.log(Level.INFO, "Recalculating path across usefull items - start [Move.tryToRecountPathAcrossItems()]");
 		ArrayList<Item> spotedItemsSorted = recentSpotedItems.getAllSorted();
 		
 		for(Item item : spotedItemsSorted){
@@ -156,6 +160,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			}
 			recentSpotedItems.remove(item);
 		}
+		log.log(Level.INFO, "Realculating path across usefull items - end [Move.tryToRecountPathAcrossItems()]");
 	}
 
 	@Override
@@ -165,16 +170,16 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 				log.log(Level.WARNING, "We are stucked [Move.flagChanged()]");
 				break;
 			case STOPPED:
-				log.log(Level.WARNING, "Stopped [Move.flagChanged()]");
+				log.log(Level.INFO, "Stopped [Move.flagChanged()]");
 				break;
 			case TARGET_REACHED:
 				handleTargetReached();
 				break;
 			case PATH_COMPUTATION_FAILED:
-				log.log(Level.WARNING, "Path computation failed [Move.flagChanged()]");
+				log.log(Level.SEVERE, "Path computation failed [Move.flagChanged()]");
 				break;
 			case NAVIGATING:
-				log.log(Level.WARNING, "Navigating [Move.flagChanged()]");
+				log.log(Level.INFO, "Navigating [Move.flagChanged()]");
 				break;
 		}
 	}

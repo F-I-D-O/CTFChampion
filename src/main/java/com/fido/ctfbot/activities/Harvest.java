@@ -29,12 +29,17 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 /**
  *
  * @author Fido
  */
 public class Harvest extends HighLevelActivity {
+	
+	
+	
+	
 	
 	private final IUT2004Navigation navigation;
 	
@@ -52,24 +57,24 @@ public class Harvest extends HighLevelActivity {
 	
 	private ArrayList<ItemInfo> harvestingPriorities;
 	
+	private ItemInfo chosenItem;
+	
 
 	
-	public Harvest(InformationBase informationBase, LogCategory log, HighLevelActivity callingActivity,
-			IUT2004Navigation navigation, Weaponry weaponry, Game game) {
-		super(informationBase, log, callingActivity);
-		this.navigation = navigation;
-		this.weaponry = weaponry;
-		this.game = game;
+	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller) {
+		super(informationBase, log, caller);
+		navigation = informationBase.getNavigation();
+		weaponry = informationBase.getWeaponry();
+		game = informationBase.getGame();
 		items = informationBase.getItems();
 	}
 	
-	public Harvest(InformationBase informationBase, LogCategory log, HighLevelActivity callingActivity,
-			IUT2004Navigation navigation, Weaponry weaponry, Game game, Location searchingAreaCenter, 
+	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller, Location searchingAreaCenter, 
 			double maxDistance) {
-		super(informationBase, log, callingActivity);
-		this.navigation = navigation;
-		this.weaponry = weaponry;
-		this.game = game;
+		super(informationBase, log, caller);
+		navigation = informationBase.getNavigation();
+		weaponry = informationBase.getWeaponry();
+		game = informationBase.getGame();
 		items = informationBase.getItems();
 		
 		this.searchingAreaCenter = searchingAreaCenter;
@@ -83,10 +88,17 @@ public class Harvest extends HighLevelActivity {
 	public void run() {
 		if(currentChildActivity == null){
 			callculateHarvestingPriority();
-			ItemInfo chosenItem = harvestingPriorities.get(0);
-			runChildActivity(new Move(informationBase, log, this, chosenItem.getItem().getLocation()));
+			if(harvestingPriorities.isEmpty()){
+				log.log(Level.INFO, "Nothing to harvest [Harvest.run()]");
+			}
+			else{
+				chosenItem = harvestingPriorities.get(0);
+				log.log(Level.INFO, "Item for harvest chosen: {0} [Harvest.run()]", chosenItem);
+				runChildActivity(new Move(informationBase, log, this, chosenItem.getItem().getLocation()));
+			}
 		}
 		else{
+			log.log(Level.INFO, "Item for harvesting allready chosen [Harvest.run()]");
 			currentChildActivity.run();
 		}
 	}
@@ -112,6 +124,7 @@ public class Harvest extends HighLevelActivity {
 	}
 	
 	private void callculateHarvestingPriority() {
+		log.log(Level.INFO, "Calculating harvesting priorities - start [Harvest.callculateHarvestingPriority()]");
         for (ItemTypeInfo itemTypeStatistic : informationBase.getItemTypeInfo().values()) {
             itemTypeStatistic.countOverallPriority();
         }
@@ -125,14 +138,15 @@ public class Harvest extends HighLevelActivity {
 			// ze seznamu priorit zcela vyřadíme věci které nemůžemne sebrat, 
 			if(!items.isPickable(itemInfo.getItem()) || 
 					// které jsou nedosažitelné
-					informationBase.isReachable(itemInfo.getItem().getNavPoint()) ||
+					!informationBase.isReachable(itemInfo.getItem().getNavPoint()) ||
 					// nebo které ještě nejsou respawnované               
-					items.isPickupSpawned(itemInfo.getItem()) ||
+					!items.isPickupSpawned(itemInfo.getItem()) ||
 					// or item is too far
 					searchingAreaCenter != null && informationBase.getNavigationUtils().getDistance(
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance
 					){
 				iterator.remove();
+				debugRemovalCause(itemInfo);
 			}
 			else {
 				ItemTypeInfo statisticForItemType = informationBase.getItemTypeInfo().get(
@@ -142,12 +156,32 @@ public class Harvest extends HighLevelActivity {
 		}
 		
         Collections.sort(harvestingPriorities, Collections.reverseOrder());
+		log.log(Level.INFO, "Calculating harvesting priorities - end [Harvest.callculateHarvestingPriority()]");
 	}
 
 	@Override
 	public void childActivityFinished() {
-		currentChildActivity = null;
+		super.childActivityFinished();
 		this.run();
+	}
+
+	private void debugRemovalCause(ItemInfo itemInfo) {
+		if(!items.isPickable(itemInfo.getItem())){
+			log.log(Level.INFO, "Item removed because it's not pickable: {0} [Harvest.debugRemovalCause()]", itemInfo.getItem());
+		} 
+		else if(!informationBase.isReachable(itemInfo.getItem().getNavPoint())){
+			log.log(Level.INFO, "Item removed because it's not reachable: {0} [Harvest.debugRemovalCause()]", itemInfo.getItem());
+		}
+		else if(!items.isPickupSpawned(itemInfo.getItem())){
+			log.log(Level.INFO, "Item removed because it's not spawned: {0} [Harvest.debugRemovalCause()]", itemInfo);
+		}
+		else if(searchingAreaCenter != null && informationBase.getNavigationUtils().getDistance(
+							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance){
+			log.log(Level.INFO, "Item removed because it's too far: {0} [Harvest.debugRemovalCause()]", itemInfo);
+		}
+		else{
+			log.log(Level.INFO, "Item removed for unknown reason: {0} [Harvest.debugRemovalCause()]", itemInfo);
+		}
 	}
 	
 }

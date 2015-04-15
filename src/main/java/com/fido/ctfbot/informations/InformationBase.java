@@ -60,7 +60,7 @@ public class InformationBase {
 	
 	public static final int TEAM_SIZE = 3;
 	
-	private static final double BASE_SIZE = 1000;
+	public static final double BASE_SIZE = 5000;
 	
 	/*
 	* Pogamut modules
@@ -213,6 +213,14 @@ public class InformationBase {
 	public HashMap<UnrealId, ItemInfo> getItemsInfo() {
 		return itemsInfo;
 	}
+
+	public Weaponry getWeaponry() {
+		return weaponry;
+	}
+
+	public Game getGame() {
+		return game;
+	}
 	
 	
 	
@@ -346,11 +354,12 @@ public class InformationBase {
 		FriendInfo friendInfo = friends.get(unrealId);
 		if(friendInfo == null){
 			log.log(Level.INFO, 
-					"Friend {0} location cannot be updatede - friendInfo is not initialized yet: [updateFriendLocation()]", 
+					"Friend {0} location cannot be updatede - friendInfo is not initialized yet. [updateFriendLocation()]", 
 					unrealId);
 		}
 		else{
 			friendInfo.setLastKnownLocation(location);	
+			log.log(Level.INFO, "Friend {0} location updated. [updateFriendLocation()]", unrealId);
 		}
 	}
 	
@@ -358,6 +367,10 @@ public class InformationBase {
 		if(!friends.containsKey(unrealId)){
 			addBlankFriend(unrealId);
 			unidentifiedPlayersIds.remove(unrealId);
+			log.log(Level.INFO, "Friend {0} initialized: [tryAddBlankFriend()]", unrealId);
+		}
+		else{
+			log.log(Level.INFO, "Friend {0} is already initialized: [tryAddBlankFriend()]", unrealId);
 		}
 	}
 

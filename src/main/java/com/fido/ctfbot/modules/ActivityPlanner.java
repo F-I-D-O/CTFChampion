@@ -19,6 +19,7 @@ package com.fido.ctfbot.modules;
 import com.fido.ctfbot.activities.Activity;
 import com.fido.ctfbot.activities.FightEnemy;
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.activities.Harvest;
 import com.fido.ctfbot.activities.ICaller;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.activities.Move;
@@ -68,6 +69,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	
 	private EnemyFlagInfo enemyFlagInfo;
 	
+	private int numberOfActivitiesEndedThisTurn = 0;
 	
 	
 	
@@ -90,6 +92,15 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	
 	public void takeOver(){
 		log.log(Level.INFO, "Activity planner start [takeOver()]");
+		
+		numberOfActivitiesEndedThisTurn = 0;
+		
+		chooseBehaviouByGoal();
+		
+		log.log(Level.INFO, "Activity planner end [takeOver()]");
+	}
+	
+	private void chooseBehaviouByGoal(){
 		switch(bot.getGoal()){
 			case GUARD_OUR_FLAG:
 				guardFlag();
@@ -101,10 +112,8 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
                 getBackOurFlag();
                 break;
 			default:
-				log.log(Level.WARNING, "Not implemented goal [takeOver()]");
-				
+				log.log(Level.WARNING, "Not implemented goal [takeOver()]");	
 		}
-		log.log(Level.INFO, "Activity planner end [takeOver()]");
 	}
 
 	private void guardFlag() {
@@ -176,7 +185,9 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				else{
 					EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
 					if(enemyInfo == null){
-						
+						log.log(Level.INFO, "Base clean - going to pick up some items [guardBase()]");
+						runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
+								InformationBase.BASE_SIZE));
 					}
 					else{
 						log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [guardBase()]");
@@ -273,8 +284,21 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 
 	@Override
 	public void childActivityFinished() {
+		currentActivity.end();
+		String activityName = currentActivity.getName();
 		currentActivity = null;
-		this.takeOver();
+		numberOfActivitiesEndedThisTurn++;
+		
+		// neverending cycle detection, sometimes we hve to wait for a message from world
+		if(numberOfActivitiesEndedThisTurn < 2){
+			log.log(Level.INFO, "Activity {0} finished, another activity will be started [childActivityFinished()]", 
+					activityName);
+			this.chooseBehaviouByGoal();
+		}
+		else{
+			log.log(Level.INFO, "Activity {0} finished, but {1} activities already finished this turn, we have to wait for a message from the world [childActivityFinished()]", 
+					new String[]{activityName, Integer.toString(numberOfActivitiesEndedThisTurn)});
+		}
 	}
 
 

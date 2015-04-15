@@ -28,8 +28,8 @@ public abstract class HighLevelActivity extends Activity implements ICaller {
 	
 	protected Activity currentChildActivity;
 
-	public HighLevelActivity(InformationBase informationBase, LogCategory log, HighLevelActivity callingActivity) {
-		super(informationBase, log, callingActivity);
+	public HighLevelActivity(InformationBase informationBase, LogCategory log, ICaller caller) {
+		super(informationBase, log, caller);
 	}
 	
 	protected void runChildActivity(Activity activity){
@@ -55,5 +55,13 @@ public abstract class HighLevelActivity extends Activity implements ICaller {
 		
 		log.log(Level.INFO, "runChildActivity end [runChildActivity()]", activity.getName());
 	}
+
+	@Override
+	public void childActivityFinished() {
+		currentChildActivity.end();
+		currentChildActivity = null;
+	}
+	
+	
 	
 }
