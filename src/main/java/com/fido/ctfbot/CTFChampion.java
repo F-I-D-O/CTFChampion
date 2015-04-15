@@ -1,7 +1,7 @@
 package com.fido.ctfbot;
 
 
-import com.fido.ctfbot.informations.ItemInfo;
+import com.fido.ctfbot.modules.NavigationUtils;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import com.fido.ctfbot.modules.ComunicationModule;
@@ -11,17 +11,14 @@ import com.fido.ctfbot.messages.CommandMessage;
 import com.fido.ctfbot.messages.LocationMessage;
 import cz.cuni.amis.introspection.java.JProp;
 import cz.cuni.amis.pogamut.base.agent.module.LogicModule;
-import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
 import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
-import cz.cuni.amis.pogamut.base.utils.math.DistanceUtils;
-import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.event.WorldObjectAppearedEvent;
-import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.visibility.model.VisibilityLocation;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004Bot;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbcommands.Initialize;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.BotDamaged;
@@ -36,8 +33,6 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Self;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004BotTCController;
 import cz.cuni.amis.utils.Cooldown;
 import cz.cuni.amis.utils.exception.PogamutException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.logging.Level;
 
 /**
@@ -72,18 +67,24 @@ import java.util.logging.Level;
 @AgentScoped
 public class CTFChampion extends UT2004BotTCController {
 	
+	/****************************************
+	* STATIC
+	****************************************/
+	
 	private static final double LOCATION_MESSAGE_SEND_INTERVAL = 5;
 	
 	
 
 	
 	public static LogCategory logStatic;
+	
+	
+	
+	/****************************************
+	* INSTANCE
+	****************************************/
 		
 	public Cooldown testHeatup = new Cooldown(10000);
-	
-	private int weaponsPriority;
-	
-	private ArrayList<ItemInfo> harvestingPriorities;
 	
 	private InformationBase informationBase;
 	
@@ -91,7 +92,7 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	private boolean leader = false;
 	
-	private IPathPlanner mainPathPlanner;
+	private IUT2004Navigation mainNavigation;
 	
 	private String startName;
 	
@@ -123,6 +124,8 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	private ComunicationModule comunicationModule;
 	
+	private NavigationUtils navigationUtils;
+	
 	
 	
 	/*
@@ -137,6 +140,14 @@ public class CTFChampion extends UT2004BotTCController {
 		return leader;
 	}
 
+	public NavigationUtils getNavigationUtils() {
+		return navigationUtils;
+	}
+
+	public IUT2004Navigation getMainNavigation() {
+		return mainNavigation;
+	}
+	
 	
 	
 	
@@ -248,8 +259,7 @@ public class CTFChampion extends UT2004BotTCController {
     @Override
     public void prepareBot(UT2004Bot bot) {
 		System.out.println("prepareBot start"); 
-		
-		mainPathPlanner = fwMap;
+		mainNavigation = nmNav;
 		
 		ititWeaponPreferences();
 		
@@ -318,7 +328,7 @@ public class CTFChampion extends UT2004BotTCController {
 		if(players.getFriends().isEmpty()){
 			log.log(Level.INFO, "bot set as leader [botFirstSpawn()]");
 			leader = true;
-			strategyPlanner = new StrategyPlanner(this, log, comunicationModule, informationBase, mainPathPlanner);
+			strategyPlanner = new StrategyPlanner(this, log, comunicationModule, informationBase);
 		}
 		
 		informationBase.addPlayersAlreadyInGame();
@@ -393,71 +403,45 @@ public class CTFChampion extends UT2004BotTCController {
 		sendLocationMessage();
     }
 
-    
+//	private void dealWithEnemis() {
+//		log.log(Level.INFO, "Deal with enemies start [dealWithEnemis()]");
+//		
+//		Player enemy = players.getNearestVisiblePlayer();
+//
+//        if(visibility.isInitialized()){
+//            log.info("Visibility module ready");
+//            if(players.canSeePlayers()){
+//                VisibilityLocation loc = DistanceUtils.getNearest(
+//                        visibility.getCoverPointsFrom(players.getNearestVisiblePlayer()),
+//                        info.getLocation(),
+//                        new DistanceUtils.IGetDistance<ILocated>() {
+//                            
+//                            @Override
+//                            public double getDistance(ILocated object, ILocated target) {
+//                                return fwMap.getDistance(navPoints.getNearestNavPoint(object), navPoints.getNearestNavPoint(target));
+//                            }
+//                        });
+//                if(!navigation.isNavigating()){
+//                    navigation.navigate(loc);
+//                }
+//            }
+//        }
+//        
+//        
+//		Item item;
+//		if(weaponsPriority != 0 && (item = getTargetItem()) != null){
+//			log.log(Level.INFO, "Harvesting in combat [dealWithEnemis()]");
+////			move.strafeTo(item, enemy);
+////			enemyInfo.setLastKnownLocation(enemy.getLocation());
+//		}
+//		else{
+////			navigation.navigate(players.getNearestVisiblePlayer());
+//			
+//		}
+//		log.log(Level.INFO, "Deal with enemies end [dealWithEnemis()]");
+//	}
 
-    public Item getTargetItem() {
-		Iterator<ItemInfo> iterator = harvestingPriorities.listIterator();
-		
-		if(iterator.hasNext()){
-			return iterator.next().getItem();
-		}
-		else {
-			return null;
-		}
-    }
 
-	private void dealWithEnemis() {
-		log.log(Level.INFO, "Deal with enemies start [dealWithEnemis()]");
-		
-		Player enemy = players.getNearestVisiblePlayer();
-
-        if(visibility.isInitialized()){
-            log.info("Visibility module ready");
-            if(players.canSeePlayers()){
-                VisibilityLocation loc = DistanceUtils.getNearest(
-                        visibility.getCoverPointsFrom(players.getNearestVisiblePlayer()),
-                        info.getLocation(),
-                        new DistanceUtils.IGetDistance<ILocated>() {
-                            
-                            @Override
-                            public double getDistance(ILocated object, ILocated target) {
-                                return fwMap.getDistance(navPoints.getNearestNavPoint(object), navPoints.getNearestNavPoint(target));
-                            }
-                        });
-                if(!navigation.isNavigating()){
-                    navigation.navigate(loc);
-                }
-            }
-        }
-        
-        
-		Item item;
-		if(weaponsPriority != 0 && (item = getTargetItem()) != null){
-			log.log(Level.INFO, "Harvesting in combat [dealWithEnemis()]");
-//			move.strafeTo(item, enemy);
-//			enemyInfo.setLastKnownLocation(enemy.getLocation());
-		}
-		else{
-//			navigation.navigate(players.getNearestVisiblePlayer());
-			
-		}
-		log.log(Level.INFO, "Deal with enemies end [dealWithEnemis()]");
-	}
-
-	public boolean searchForUsefullObject() {
-		log.log(Level.INFO, "Searching of usefull objects start [searchForUsefullObject()]");
-		
-		Item target = getTargetItem(); 
-		
-		// pokud jsme nenašli vhodnou věc k sebrání
-		if(target == null){
-			log.log(Level.INFO, "No suitable item found [searchForUsefullObject()]");
-			return false; 
-		}
-		log.log(Level.INFO, "item found: {0} [searchForUsefullObject()]", target);
-		navigation.navigate(target);
-		return true;
-	}
 
 //	private void decreaseRespawnTimes() {
 //		for (ItemInfo itemStatistic : itemStatistics.values()) {
@@ -502,38 +486,16 @@ public class CTFChampion extends UT2004BotTCController {
         weaponPrefs.newPrefsRange(100000).add(UT2004ItemType.LIGHTNING_GUN, true).add(UT2004ItemType.SHOCK_RIFLE, true);
 	}
 
-	private void calculateWeaponsPriority() {
-		boolean primaryFiringMode = shoot.getLastShooting() == null ? true : shoot.getLastShooting().isPrimary();
-		int currentAmmo = primaryFiringMode ? info.getCurrentAmmo() : info.getCurrentSecondaryAmmo();
-		ItemType currentAmmoType = primaryFiringMode ? weaponry.getCurrentWeapon().getDescriptor().getPriAmmoItemType() : 
-				weaponry.getCurrentWeapon().getDescriptor().getSecAmmoItemType();
-		
-		weaponsPriority = 0;
-		
-		if(currentAmmo < weaponry.getMaxAmmo(currentAmmoType)){
-			weaponsPriority++;
-			if(currentAmmo < getCriticalAmmoAmount()){
-				weaponsPriority += 5;
-			}
-			if(currentAmmo == 0){
-				weaponsPriority = 10;
-			}
-		}
-		log.log(Level.INFO, "Weapons priority calculated to {0} [calculateWeaponsPriority()]", weaponsPriority);
-	}
-
-	private int getCriticalAmmoAmount() {
-		return 10;
-	}
-
-	
-
 	/**
 	 * Initialize bot modules
 	 */
 	private void initializeModules() {
-		informationBase = new InformationBase(this, log, players, ctf, mainPathPlanner, info, fwMap, navigation, shoot,
+
+		informationBase = new InformationBase(this, log, players, ctf, info, fwMap, navigation, shoot,
 			weaponPrefs, weaponry, items, navPoints, game);
+		
+		navigationUtils = new NavigationUtils(this, log, informationBase, fwMap, navPoints, 
+				(UT2004Navigation) navigation, nmNav);
 		
 		comunicationModule = new ComunicationModule(this, log, tcClient, informationBase);
 		

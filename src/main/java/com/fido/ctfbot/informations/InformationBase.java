@@ -19,7 +19,7 @@ package com.fido.ctfbot.informations;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.ItemDistanceComparator;
-import com.fido.ctfbot.NavigationUtils;
+import com.fido.ctfbot.modules.NavigationUtils;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
@@ -60,7 +60,7 @@ public class InformationBase {
 	
 	public static final int TEAM_SIZE = 3;
 	
-	public static final double BASE_SIZE = 5000;
+	public static final double BASE_SIZE = 2000;
 	
 	/*
 	* Pogamut modules
@@ -98,7 +98,7 @@ public class InformationBase {
 	
 	/* submodules */
 	
-	private final NavigationUtils navigationUtils;
+	
 	
 	
 	/* collections */
@@ -121,8 +121,6 @@ public class InformationBase {
 	
 	
 	/* other */
-	
-	private final IPathPlanner mainPathPlanner;
 	
 	private OurFlagInfo ourFlagInfo;
 	
@@ -202,10 +200,6 @@ public class InformationBase {
 		return itemDistanceComparator;
 	}
 
-	public NavigationUtils getNavigationUtils() {
-		return navigationUtils;
-	}
-
 	public HashMap<UT2004ItemType, ItemTypeInfo> getItemTypeInfo() {
 		return itemTypeInfo;
 	}
@@ -230,9 +224,9 @@ public class InformationBase {
 	
 	
 	
-	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctf, IPathPlanner mainPathPlanner,
-			AgentInfo info, FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, 
-			WeaponPrefs weaponPrefs, Weaponry weaponry, Items items, NavPoints navPoints, Game game) {
+	public InformationBase(CTFChampion bot, LogCategory log, Players players, CTF ctf, AgentInfo info, 
+			FloydWarshallMap fwMap, IUT2004Navigation navigation, ImprovedShooting shoot, WeaponPrefs weaponPrefs, 
+			Weaponry weaponry, Items items, NavPoints navPoints, Game game) {
 		this.log = log;
 		this.bot = bot;
 		this.players = players;
@@ -249,8 +243,6 @@ public class InformationBase {
 		
         ItemInfo.setInfo(items);
         
-		navigationUtils = new NavigationUtils(fwMap, navPoints);
-		this.mainPathPlanner = mainPathPlanner;
 		friends = new HashMap<UnrealId, FriendInfo>();
 		enemies = new HashMap<UnrealId, EnemyInfo>();
 		allPlayersInfo = new HashMap<UnrealId, PlayerInfo>();
@@ -423,7 +415,7 @@ public class InformationBase {
 	public NavPoint getItemNavPoint(Object itemObject) {
         Item item = (Item) itemObject;
 		return itemsInfo.get(item.getId()) == null ? 
-				navigationUtils.getNearestNavpoint(item.getLocation()) : item.getNavPoint();
+				bot.getNavigationUtils().getNearestNavpoint(item.getLocation()) : item.getNavPoint();
 	}
 
 	public boolean AmIInOurBase() {
@@ -440,11 +432,11 @@ public class InformationBase {
 	}
 	
 	public boolean isInOurBase(Location location){
-		return navigationUtils.getDistance(location, ctf.getOurBase().getLocation()) < BASE_SIZE;
+		return bot.getNavigationUtils().getDistance(location, ctf.getOurBase().getLocation()) < BASE_SIZE;
 	}
 	
 	public boolean isReachable(NavPoint navPoint) {
-		return navigationUtils.pathExist(navigationUtils.getNearestNavpoint(info.getLocation()), navPoint);
+		return bot.getNavigationUtils().pathExist(bot.getNavigationUtils().getNearestNavpoint(info.getLocation()), navPoint);
 	}
 	
 }

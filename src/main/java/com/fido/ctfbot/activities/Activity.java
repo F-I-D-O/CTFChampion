@@ -16,6 +16,7 @@
  */
 package com.fido.ctfbot.activities;
 
+import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import java.util.logging.Level;
@@ -26,6 +27,8 @@ import java.util.logging.Level;
  */
 public abstract class Activity {
 	
+	protected final CTFChampion bot;
+	
 	protected final InformationBase informationBase;
 	
 	protected final LogCategory log;
@@ -35,6 +38,7 @@ public abstract class Activity {
 	
 	
 	public Activity(InformationBase informationBase, LogCategory log, ICaller caller) {
+		this.bot = informationBase.getBot();
 		this.informationBase = informationBase;
 		this.log = log;
 		this.caller = caller;

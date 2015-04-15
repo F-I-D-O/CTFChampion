@@ -37,13 +37,11 @@ public class StrategyPlanner extends CTFChampionModule{
 	
 	public static final Goal DEFAULT_STARTUP_GOAL = Goal.GUARD_OUR_FLAG;
 	
-	
-	private final ComunicationModule comunicationModule;
-	
-	private final IPathPlanner mainPathPlanner;
-	
 	private final CTF ctf;
 	
+	
+	
+	private final ComunicationModule comunicationModule;
 	
 	private Strategy currentStrategy;
 	
@@ -52,10 +50,9 @@ public class StrategyPlanner extends CTFChampionModule{
 
 	
 	public StrategyPlanner(CTFChampion bot, LogCategory log, ComunicationModule comunicationModule,
-			InformationBase informationBase, IPathPlanner mainPathPlanner) {
+			InformationBase informationBase) {
 		super(bot, log, informationBase);
 		this.comunicationModule = comunicationModule;
-		this.mainPathPlanner = mainPathPlanner;
 		this.ctf = informationBase.getCtf();
 	}
 	

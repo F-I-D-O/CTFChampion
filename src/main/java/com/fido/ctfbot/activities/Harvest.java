@@ -142,7 +142,7 @@ public class Harvest extends HighLevelActivity {
 					// nebo které ještě nejsou respawnované               
 					!items.isPickupSpawned(itemInfo.getItem()) ||
 					// or item is too far
-					searchingAreaCenter != null && informationBase.getNavigationUtils().getDistance(
+					searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance
 					){
 				iterator.remove();
@@ -175,7 +175,7 @@ public class Harvest extends HighLevelActivity {
 		else if(!items.isPickupSpawned(itemInfo.getItem())){
 			log.log(Level.INFO, "Item removed because it's not spawned: {0} [Harvest.debugRemovalCause()]", itemInfo);
 		}
-		else if(searchingAreaCenter != null && informationBase.getNavigationUtils().getDistance(
+		else if(searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance){
 			log.log(Level.INFO, "Item removed because it's too far: {0} [Harvest.debugRemovalCause()]", itemInfo);
 		}

@@ -60,7 +60,7 @@ public class FightEnemy extends Activity {
 	public FightEnemy(InformationBase informationBase, LogCategory log, ICaller caller) {
 		super(informationBase, log, caller);
 		players = informationBase.getPlayers();
-		navigation = informationBase.getNavigation();
+		navigation = bot.getMainNavigation();
 		shoot = informationBase.getShoot();
 		weaponPrefs = informationBase.getWeaponPrefs();
         chosenEmemy = players.getNearestVisibleEnemy();
@@ -78,6 +78,7 @@ public class FightEnemy extends Activity {
 
 	@Override
 	public void run() {
+		
         if(chosenEmemy != null){
             navigation.setFocus(chosenEmemy);
             navigation.navigate(chosenEmemy);

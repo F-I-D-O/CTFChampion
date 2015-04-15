@@ -74,7 +74,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	
 	public Move(InformationBase informationBase, LogCategory log, ICaller caller, Location target) {
 		super(informationBase, log, caller);
-		this.navigation = informationBase.getNavigation();
+		this.navigation = bot.getMainNavigation();
 		this.players = informationBase.getPlayers();
 		this.shoot = informationBase.getShoot();
 		this.weaponPrefs = informationBase.getWeaponPrefs();
@@ -145,9 +145,9 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			if(isWorthTaking){
 				NavPoint itemNavPoint = 
 						itemInfo == null ? 
-						informationBase.getNavigationUtils().getNearestNavpoint(item.getLocation()) : item.getNavPoint();
+						bot.getNavigationUtils().getNearestNavpoint(item.getLocation()) : item.getNavPoint();
 
-				NavPoint targetNavPoint = informationBase.getNavigationUtils().getNearestNavpoint(currentTarget);
+				NavPoint targetNavPoint = bot.getNavigationUtils().getNearestNavpoint(currentTarget);
 				
 				double distanceToItem = fwMap.getDistance(info.getNearestNavPoint(), itemNavPoint);
 				double distanceFromItem = fwMap.getDistance(itemNavPoint, targetNavPoint);

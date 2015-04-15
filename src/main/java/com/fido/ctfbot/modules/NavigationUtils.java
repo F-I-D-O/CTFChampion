@@ -14,26 +14,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
+package com.fido.ctfbot.modules;
 
+import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.informations.InformationBase;
+import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.pathfollowing.NavMeshNavigation;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
+import java.util.logging.Level;
 
 /**
  *
  * @author Fido
  */
-public class NavigationUtils {
+public class NavigationUtils extends CTFChampionModule {
 	
 	private final FloydWarshallMap fwMap;
 	
 	private final NavPoints navPoints;
+	
+	private final UT2004Navigation navigation;
+			
+	private final NavMeshNavigation nmNav;
+	
+	
+	
+	
+	
 
-	public NavigationUtils(FloydWarshallMap fwMap, NavPoints navPoints) {
+	public NavigationUtils(CTFChampion bot, LogCategory log, InformationBase informationBase, FloydWarshallMap fwMap, 
+			NavPoints navPoints, UT2004Navigation navigation, NavMeshNavigation nmNav) {
+		super(bot, log, informationBase);
 		this.fwMap = fwMap;
 		this.navPoints = navPoints;
+		this.navigation = navigation;
+		this.nmNav = nmNav;
 	}
 	
 	public double getDistance(Location location1, Location location2){
@@ -48,6 +68,13 @@ public class NavigationUtils {
 		return fwMap.reachable(navPoint1, navPoint2);
 	}
 
+	private boolean useNavMesh(){
+		return bot.getMainNavigation() instanceof NavMeshNavigation;
+	}
 	
+	public void navigate(Location target){
+		log.log(Level.INFO, "Navigating to {0} [navigate()]", target);
+		bot.getMainNavigation().navigate(target);
+	}
 	
 }
