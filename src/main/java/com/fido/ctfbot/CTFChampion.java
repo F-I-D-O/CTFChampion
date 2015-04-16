@@ -3,12 +3,15 @@ package com.fido.ctfbot;
 
 import com.fido.ctfbot.modules.NavigationUtils;
 import com.fido.ctfbot.informations.InformationBase;
+import com.fido.ctfbot.informations.ItemInfo;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import com.fido.ctfbot.modules.ComunicationModule;
 import com.fido.ctfbot.modules.ActivityPlanner;
 import com.fido.ctfbot.modules.ActionPlanner;
 import com.fido.ctfbot.messages.CommandMessage;
 import com.fido.ctfbot.messages.LocationMessage;
+import com.fido.ctfbot.messages.PickupMessage;
+import com.fido.ctfbot.modules.DebugTools;
 import cz.cuni.amis.introspection.java.JProp;
 import cz.cuni.amis.pogamut.base.agent.module.LogicModule;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
@@ -27,6 +30,7 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.ConfigC
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.GameInfo;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.InitedMessage;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.ItemPickedUp;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.PlayerJoinsGame;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Self;
@@ -125,6 +129,8 @@ public class CTFChampion extends UT2004BotTCController {
 	private ComunicationModule comunicationModule;
 	
 	private NavigationUtils navigationUtils;
+    
+    private DebugTools debugTools;
 	
 	
 	
@@ -147,7 +153,12 @@ public class CTFChampion extends UT2004BotTCController {
 	public IUT2004Navigation getMainNavigation() {
 		return mainNavigation;
 	}
+
+    public DebugTools getDebugTools() {
+        return debugTools;
+    }
 	
+    
 	
 	
 	
@@ -171,8 +182,8 @@ public class CTFChampion extends UT2004BotTCController {
     }
 	
 	@EventListener(eventClass = LocationMessage.class)
-    public void onLocationAquired(LocationMessage locationMessage){
-       log.log(Level.INFO, "Location aquired: type: {0}, unrealId: {1} loaction: {2}", 
+    public void onLocationAcquired(LocationMessage locationMessage){
+       log.log(Level.INFO, "Location acquired: type: {0}, unrealId: {1} loaction: {2}", 
 			new String[]{locationMessage.getInfoType().toString(), locationMessage.getUnrealId().toString(),
 				locationMessage.getLocation().toString()}); 
 	   
@@ -186,19 +197,34 @@ public class CTFChampion extends UT2004BotTCController {
 		}
 	   
     }
+    
+    @EventListener(eventClass = PickupMessage.class)
+    public void onPickupMessageAcquired(PickupMessage pickupMessage){
+        log.log(Level.INFO, pickupMessage.getLogInfo()); 
+        ItemInfo itemInfo = informationBase.getItemInfo(pickupMessage.getId());
+        if(itemInfo != null){
+            itemInfo.restartRespawnTime();
+        }
+        else{
+            log.log(Level.WARNING, "Item without ItemInfo picked up: {0} by your friend", pickupMessage.getId()); 
+        }  
+    }
+    
 	
-//	@EventListener(eventClass = ItemPickedUp.class)
-//	private void OnItemPickedUp(ItemPickedUp event){
-//		ItemInfo itemStat = itemStatistics.get(event.getId());
-//		if(itemStat != null){
-//			itemStat.restartRespawnTime();
-//		}
-//		else{
-//			log.log(Level.WARNING, "item without statistic picked up: {0}", event.getId()); 
-//		}
-//		
-//		event.getType();
-//	}
+	@EventListener(eventClass = ItemPickedUp.class)
+	private void OnItemPickedUp(ItemPickedUp event){
+		ItemInfo itemInfo = informationBase.getItemInfo(event.getId());
+        
+		if(itemInfo != null){
+			itemInfo.restartRespawnTime();
+            comunicationModule.sendPickup(event.getId(), event.getType(), event.getLocation());
+		}
+		else{
+			log.log(Level.WARNING, "Item without ItemInfo picked up: {0}", event.getId()); 
+		}
+		
+		event.getType();
+	}
 	
 	@EventListener(eventClass = WorldObjectAppearedEvent.class)
 	private void OnPlayerJoinsGame(WorldObjectAppearedEvent event){
@@ -298,6 +324,7 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		CTFChampion.logStatic = log;
 		
+        informationBase.initItemTypeInfo();
 		informationBase.initItemsInfo();
 		
 		log.info("botInitialized end"); 
@@ -384,21 +411,24 @@ public class CTFChampion extends UT2004BotTCController {
 			firsLogic = false;
 		}
 		
-        
-		
 		// checks that no action is taken until all bots are in game
 		if(allBotsInGame || checkAllBotsInGame()){
-			
-	//		decreaseRespawnTimes();
-	//		calculateWeaponsPriority();
-	//		callculateHarvestingPriority();
+            
+            // decrease items respawn times
+            informationBase.decreaseRespawnTimes();
 
+            // strategy planning
 			if(leader){
 				strategyPlanner.makeStrategy();
 			}
 
+            // actions and activities after that
 			actionPlanner.takeOver();
 		}
+        else{
+            log.log(Level.INFO, "There are not enough players in game. Number of bots in game: {0}.", 
+                    informationBase.getNumberOfNotConnectedPlayers());
+        }
 		
 		sendLocationMessage();
     }
@@ -443,11 +473,7 @@ public class CTFChampion extends UT2004BotTCController {
 
 
 
-//	private void decreaseRespawnTimes() {
-//		for (ItemInfo itemStatistic : itemStatistics.values()) {
-//			itemStatistic.decreaseRespawnTime();
-//		}
-//	}
+
 
 	private void ititWeaponPreferences() {
 		initGeneralWeaponPreferences();
@@ -493,6 +519,8 @@ public class CTFChampion extends UT2004BotTCController {
 
 		informationBase = new InformationBase(this, log, players, ctf, info, fwMap, navigation, shoot,
 			weaponPrefs, weaponry, items, navPoints, game);
+        
+        debugTools = new DebugTools(this, log, informationBase, draw);
 		
 		navigationUtils = new NavigationUtils(this, log, informationBase, fwMap, navPoints, 
 				(UT2004Navigation) navigation, nmNav);

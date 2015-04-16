@@ -93,6 +93,7 @@ public class Harvest extends HighLevelActivity {
 			}
 			else{
 				chosenItem = harvestingPriorities.get(0);
+                
 				log.log(Level.INFO, "Item for harvest chosen: {0} [Harvest.run()]", chosenItem);
 				runChildActivity(new Move(informationBase, log, this, chosenItem.getItem().getLocation()));
 			}
@@ -125,7 +126,7 @@ public class Harvest extends HighLevelActivity {
 	
 	private void callculateHarvestingPriority() {
 		log.log(Level.INFO, "Calculating harvesting priorities - start [Harvest.callculateHarvestingPriority()]");
-        for (ItemTypeInfo itemTypeStatistic : informationBase.getItemTypeInfo().values()) {
+        for (ItemTypeInfo itemTypeStatistic : informationBase.getItemTypesInfo().values()) {
             itemTypeStatistic.countOverallPriority();
         }
 		
@@ -140,7 +141,7 @@ public class Harvest extends HighLevelActivity {
 					// které jsou nedosažitelné
 					!informationBase.isReachable(itemInfo.getItem().getNavPoint()) ||
 					// nebo které ještě nejsou respawnované               
-					!items.isPickupSpawned(itemInfo.getItem()) ||
+					!itemInfo.isItemSpawned() ||
 					// or item is too far
 					searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance
@@ -149,9 +150,7 @@ public class Harvest extends HighLevelActivity {
 				debugRemovalCause(itemInfo);
 			}
 			else {
-				ItemTypeInfo statisticForItemType = informationBase.getItemTypeInfo().get(
-						(UT2004ItemType)itemInfo.getItem().getType());
-				itemInfo.countOverallPriority(statisticForItemType);
+				itemInfo.countOverallPriority();
 			}
 		}
 		

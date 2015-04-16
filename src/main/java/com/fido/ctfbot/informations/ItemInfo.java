@@ -23,6 +23,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
+import java.util.logging.Level;
 
 /**
  *
@@ -66,6 +67,10 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 	private double distancePriority;
 	
 	private double overallPriority;
+    
+    private final ItemTypeInfo itemTypeInfo;
+    
+    
 
 	public Item getItem() {
 		return item;
@@ -113,6 +118,7 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 		this.navigation = navigation;
 		this.log = log;
 		items = informationBase.getItems();
+        this.itemTypeInfo = informationBase.getItemTypesInfo().get((UT2004ItemType) item.getType());
 	}
 
     @Override
@@ -120,23 +126,37 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
         return (int) Math.round((overallPriority - o.overallPriority) * 10);
     }
 
-	public void countDistancePriority() {
-		double distance = fwMap.getDistance(info.getNearestNavPoint(), navigation.getNearestNavPoint(item));
-//		log.log(Level.INFO, "Distance to: {0} counted as {1}[countAmountPriority()]", new Object[]{item, distance});
-		distancePriority = 80 / Math.pow((distance / 100), 3);
-	}
+//	public void countDistancePriority() {
+//		double distance = fwMap.getDistance(info.getNearestNavPoint(), navigation.getNearestNavPoint(item));
+////		log.log(Level.INFO, "Distance to: {0} counted as {1}[countAmountPriority()]", new Object[]{item, distance});
+//		distancePriority = 80 / Math.pow((distance / 100), 3);
+//	}
 
-	public void countOverallPriority(ItemTypeInfo statisticForItemType) {
-		countDistancePriority();
+	public void countOverallPriority() {
+//		countDistancePriority();
 		
 		// null priority for items with unknown item type
-		double itemTypePriority = statisticForItemType == null ? 0.0 : statisticForItemType.getOverallPriority();
-		overallPriority = itemTypePriority + distancePriority;
+        double itemTypePriority;
+        if(itemTypeInfo == null){
+            itemTypePriority = 0.0;
+            log.log(Level.WARNING, "Computing priority for item without item type: [getItemInfo()]", item.getId());
+        }
+        else{
+           itemTypePriority = itemTypeInfo.getOverallPriority(); 
+        }
+
+//		overallPriority = itemTypePriority + distancePriority;
+        
+        overallPriority = itemTypePriority;
 	}
 	
 	public boolean isWorthTakeWhileNavigating(){
 		return items.isPickable(item) && items.isPickupSpawned(item);
 	}
+    
+    public boolean isItemSpawned(){
+        return timeToRespawn == 0;
+    }
 	
 	
 }

@@ -23,7 +23,11 @@ import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.informations.InfoType;
 import com.fido.ctfbot.messages.CommandMessage;
 import com.fido.ctfbot.messages.LocationMessage;
+import com.fido.ctfbot.messages.PickupMessage;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004TCClient;
 import java.util.logging.Level;
 
@@ -53,7 +57,7 @@ public class ComunicationModule extends CTFChampionModule {
 		
 		log.log(Level.INFO, "Sending command: {0} for {1} [sendCommand()]", 
 				new String[]{goal.toString(), friend.getName()});
-		return teamComClient.sendToTeam(new CommandMessage(friend, goal));
+		return teamComClient.sendToTeamOthers(new CommandMessage(friend, goal));
 	}
 
 	private boolean isTeamComReady() {
@@ -72,7 +76,16 @@ public class ComunicationModule extends CTFChampionModule {
 		}
 		
 		log.log(Level.INFO, "Sending bot location message: [sendMyLocationMessage()]");
-		teamComClient.sendToTeam(new LocationMessage(informationBase.getInfo().getLocation(), 
+		teamComClient.sendToTeamOthers(new LocationMessage(informationBase.getInfo().getLocation(), 
 				informationBase.getInfo().getId(), InfoType.FRIEND));
 	}
+
+    public void sendPickup(UnrealId id, ItemType itemType, Location location) {
+        if(!isTeamComReady()){
+			return;
+		}
+        
+        log.log(Level.INFO, "Sending pick up message: [sendPickup()]");
+		teamComClient.sendToTeamOthers(new PickupMessage(id, itemType, location));
+    }
 }
