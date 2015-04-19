@@ -4,6 +4,8 @@ package com.fido.ctfbot;
 import com.fido.ctfbot.modules.NavigationUtils;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
+import com.fido.ctfbot.informations.players.EnemyInfo;
+import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import com.fido.ctfbot.modules.ComunicationModule;
 import com.fido.ctfbot.modules.ActivityPlanner;
@@ -15,6 +17,7 @@ import com.fido.ctfbot.modules.DebugTools;
 import cz.cuni.amis.introspection.java.JProp;
 import cz.cuni.amis.pogamut.base.agent.module.LogicModule;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
+import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.ObjectClassEventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
 import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
@@ -35,6 +38,7 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.PlayerJoinsGame;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Self;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004BotTCController;
+import cz.cuni.amis.pogamut.ut2004.utils.UnrealUtils;
 import cz.cuni.amis.utils.Cooldown;
 import cz.cuni.amis.utils.exception.PogamutException;
 import java.util.logging.Level;
@@ -108,10 +112,11 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	private boolean allPlayersConnectedToInformationBase = false;
 	
-	
-    // Follwing fields are required only iff code inside {@link EmptyBot#logic()} is uncommented.
     private long   lastLogicTime        = -1;
+	
     private long   logicIterationNumber = 0;    
+	
+	private final Cooldown sendEnemyPositionMessageCooldown = new Cooldown(1000);
 	
 	
 	
@@ -134,12 +139,17 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	
 	
+	
 	/*
 	* GETTERS AND SETTERS
 	*/
 
 	public Goal getGoal() {
 		return goal;
+	}
+
+	public void setGoal(Goal goal) {
+		this.goal = goal;
 	}
 
 	public boolean isLeader() {
@@ -157,6 +167,10 @@ public class CTFChampion extends UT2004BotTCController {
     public DebugTools getDebugTools() {
         return debugTools;
     }
+
+	public long getLogicIterationNumber() {
+		return logicIterationNumber;
+	}
 	
     
 	
@@ -177,6 +191,16 @@ public class CTFChampion extends UT2004BotTCController {
 		   goal = commandMessage.getGoal();
 		   setName("goal just aquired");
 	   }
+	   else{
+		   FriendInfo commandedFriend = informationBase.getFriends().get(commandMessage.getTargetPlayerId());
+		   if(commandedFriend != null){
+			   commandedFriend.setGoal(commandMessage.getGoal());
+		   }
+		   else{
+			   log.log(Level.SEVERE, "Player with id: {0} aquired command but is not initialized", 
+					   commandMessage.getTargetPlayerId());
+		   }
+	   }
 	   LogicModule module;
 	   
     }
@@ -193,6 +217,9 @@ public class CTFChampion extends UT2004BotTCController {
 					informationBase.tryAddBlankFriend(locationMessage.getUnrealId());
 				}
 				informationBase.updateFriendLocation(locationMessage.getUnrealId(), locationMessage.getLocation());
+				break;
+			case ENEMY:
+				informationBase.updateEnemyLocation(locationMessage.getUnrealId(), locationMessage.getLocation());
 				break;
 		}
 	   
@@ -227,7 +254,7 @@ public class CTFChampion extends UT2004BotTCController {
 	}
 	
 	@EventListener(eventClass = WorldObjectAppearedEvent.class)
-	private void OnPlayerJoinsGame(WorldObjectAppearedEvent event){
+	private void OnItemAppeared(WorldObjectAppearedEvent event){
 		if(event.getObject() instanceof Item){
 			Item item = (Item) event.getObject();
 			informationBase.getRecentSpotedItems().addItem(item);
@@ -256,6 +283,39 @@ public class CTFChampion extends UT2004BotTCController {
 		}
 	}
 	
+	@ObjectClassEventListener(eventClass = WorldObjectUpdatedEvent.class, objectClass = Player.class)
+    protected void playerUpdated(WorldObjectUpdatedEvent<Player> event) {
+        Player player = event.getObject();
+		
+        // First player objects are received in HandShake - at that time we don't have Self message yet or players location!!
+        if (player.getLocation() == null || info.getLocation() == null) {
+            return;
+        }
+		
+		// we only have to update enemy, because friends reports about themaselfes
+		EnemyInfo enemyInfo = informationBase.getEnemies().get(player.getId());
+		if(enemyInfo != null){
+			enemyInfo.setLastKnownLocation(player.getLocation());
+			enemyInfo.setLastKnownLocationTime(info.getTime());
+			if(sendEnemyPositionMessageCooldown.isCool()){
+				comunicationModule.sendEnemyMessage(player);
+				sendEnemyPositionMessageCooldown.use();
+			}
+		}
+    }
+	
+	@EventListener(eventClass=BotDamaged.class)
+    public void botDamaged(BotDamaged event) {
+    	// Uncomment this line to gain information about damage the bot receives
+    	//sayGlobal("GOT DAMAGE: " + event.getDamage() + ", HEALTH: " + info.getHealth());
+    	// Notice that "HEALTH" does not fully match the damage received, because "HEALTH" is updated periodically
+    	// but BotDamaged message comes as event, therefore the "HEALTH" number lags behind a bit (250ms at max)
+    }
+	
+	
+	
+	
+	
 	 /**
      * Called each time the bot dies. Good for reseting all bot's state
      * dependent variables.
@@ -268,16 +328,6 @@ public class CTFChampion extends UT2004BotTCController {
         //sayGlobal("I was KILLED!");
     }
     
-    @EventListener(eventClass=BotDamaged.class)
-    public void botDamaged(BotDamaged event) {
-    	// Uncomment this line to gain information about damage the bot receives
-    	//sayGlobal("GOT DAMAGE: " + event.getDamage() + ", HEALTH: " + info.getHealth());
-    	// Notice that "HEALTH" does not fully match the damage received, because "HEALTH" is updated periodically
-    	// but BotDamaged message comes as event, therefore the "HEALTH" number lags behind a bit (250ms at max)
-    }
-	
-	
-
     /**
      * Initialize all necessary variables here, before the bot actually receives 
      * anything from the environment.
@@ -290,6 +340,8 @@ public class CTFChampion extends UT2004BotTCController {
 		ititWeaponPreferences();
 		
 		initializeModules();		
+		
+		debugTools.clear();
 	
         // By uncommenting following line, you can make the bot to do the file logging of all its components
         //bot.getLogger().addDefaultFileHandler(new File("EmptyBot.log"));

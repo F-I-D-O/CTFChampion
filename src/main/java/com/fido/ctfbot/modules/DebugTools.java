@@ -56,5 +56,9 @@ public class DebugTools extends CTFChampionModule {
         draw.drawLine(informationBase.getInfo().getLocation(), target);
         return;
     }
+	
+	public void clear(){
+		draw.clearAll();
+	}
     
 }

@@ -14,15 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
+package com.fido.ctfbot.messages;
+
+import com.fido.ctfbot.informations.InfoType;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 
 /**
  *
  * @author Fido
  */
-public enum Goal {
-	GUARD_OUR_FLAG,
-	GET_ENEMY_FLAG,
-	HARVEST_NEAR_OUR_BASE,
-    GET_BACK_OUR_FLAG
+public class EnemyMessage extends LocationMessage {
+
+	public EnemyMessage(Location location, UnrealId unrealId, InfoType infoType) {
+		super(location, unrealId, infoType);
+	}
+	
 }

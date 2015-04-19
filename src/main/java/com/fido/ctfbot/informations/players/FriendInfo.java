@@ -99,13 +99,7 @@ public class FriendInfo extends PlayerInfo{
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	public boolean isMe(){
+		return info != null;
+	}
 }

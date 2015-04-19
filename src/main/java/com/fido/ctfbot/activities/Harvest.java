@@ -25,7 +25,6 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,6 +35,11 @@ import java.util.logging.Level;
  * @author Fido
  */
 public class Harvest extends HighLevelActivity {
+	
+	public static final double HARVEST_NEAR_BASE_DISTANCE_LIMIT = 3000;
+	
+	public static final double TIME_BETWEEN_TWO_HARVEST_ATTEMPTS = 20;
+	
 	
 	
 	
@@ -90,6 +94,8 @@ public class Harvest extends HighLevelActivity {
 			callculateHarvestingPriority();
 			if(harvestingPriorities.isEmpty()){
 				log.log(Level.INFO, "Nothing to harvest [Harvest.run()]");
+				informationBase.setTimeOfLastNothingToHarvest(informationBase.getInfo().getTime());
+				caller.childActivityFinished();
 			}
 			else{
 				chosenItem = harvestingPriorities.get(0);

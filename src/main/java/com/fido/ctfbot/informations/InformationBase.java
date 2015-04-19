@@ -52,13 +52,13 @@ import java.util.logging.Level;
  *
  * @author Fido
  */
-public class InformationBase {
+public final class InformationBase {
 	
 	private static final double MAX_DISTANCE = 999999999;
 	
 	public static final int TEAM_SIZE = 3;
 	
-	public static final double BASE_SIZE = 2000;
+	public static final double BASE_SIZE = 1500;
 	
 	/*
 	* Pogamut modules
@@ -125,6 +125,8 @@ public class InformationBase {
 	private EnemyFlagInfo enemyFlagInfo;
 	
 	private int numberOfNotConnectedPlayers = 0;
+	
+	private double timeOfLastNothingToHarvest = 0;
 	
 	
 	
@@ -212,6 +214,18 @@ public class InformationBase {
 
 	public Game getGame() {
 		return game;
+	}
+
+	public double getTimeOfLastNothingToHarvest() {
+		return timeOfLastNothingToHarvest;
+	}
+
+	public void setTimeOfLastNothingToHarvest(double timeOfLastNothingToHarvest) {
+		this.timeOfLastNothingToHarvest = timeOfLastNothingToHarvest;
+	}
+
+	public NavPoints getNavPoints() {
+		return navPoints;
 	}
 	
 	
@@ -344,11 +358,12 @@ public class InformationBase {
 		FriendInfo friendInfo = friends.get(unrealId);
 		if(friendInfo == null){
 			log.log(Level.INFO, 
-					"Friend {0} location cannot be updatede - friendInfo is not initialized yet. [updateFriendLocation()]", 
+					"Friend {0} location cannot be updated - friendInfo is not initialized yet. [updateFriendLocation()]", 
 					unrealId);
 		}
 		else{
 			friendInfo.setLastKnownLocation(location);	
+			friendInfo.setLastKnownLocationTime(info.getTime());
 			log.log(Level.INFO, "Friend {0} location updated. [updateFriendLocation()]", unrealId);
 		}
 	}
@@ -450,6 +465,20 @@ public class InformationBase {
     public void decreaseRespawnTimes() {
 		for (ItemInfo itemInfo : itemsInfo.values()) {
 			itemInfo.decreaseRespawnTime();
+		}
+	}
+
+	public void updateEnemyLocation(UnrealId unrealId, Location location) {
+		EnemyInfo enemyInfo = enemies.get(unrealId);
+		if(enemyInfo == null){
+			log.log(Level.INFO, 
+					"Enemy {0} location cannot be updated - enemyInfo is not initialized yet. [updateEnemyLocation()]", 
+					unrealId);
+		}
+		else{
+			enemyInfo.setLastKnownLocation(location);
+			enemyInfo.setLastKnownLocationTime(info.getTime());
+			log.log(Level.INFO, "Enemy {0} location updated. [updateEnemyLocation()]", unrealId);
 		}
 	}
 	

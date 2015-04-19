@@ -43,6 +43,8 @@ public abstract class PlayerInfo {
 	
 	protected Location lastKnownLocation;
 	
+	private double lastKnownLocationTime;
+	
 	
 	
 	public Player getPlayer() {
@@ -52,6 +54,16 @@ public abstract class PlayerInfo {
 	public void setLastKnownLocation(Location lastKnownLocation) {
 		this.lastKnownLocation = lastKnownLocation;
 	}
+
+	public double getLastKnownLocationTime() {
+		return lastKnownLocationTime;
+	}
+
+	public void setLastKnownLocationTime(double lastKnownLocationTime) {
+		this.lastKnownLocationTime = lastKnownLocationTime;
+	}
+	
+	
 	
 	
 	

@@ -23,6 +23,7 @@ import com.fido.ctfbot.activities.Harvest;
 import com.fido.ctfbot.activities.ICaller;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.activities.Move;
+import com.fido.ctfbot.activities.TakePosition;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
@@ -48,6 +49,8 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	private static final double ENEMY_FLAG_LOCATION_EXPIRE_TIME = 5;
 	
 	private static final double OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION = 1000;
+	
+
 	
 	
 	private final AdvancedLocomotion move;
@@ -111,6 +114,9 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
             case GET_BACK_OUR_FLAG:
                 getBackOurFlag();
                 break;
+			case HARVEST_NEAR_OUR_BASE:
+                harvestNearOurBase();
+                break;	
 			default:
 				log.log(Level.WARNING, "Not implemented goal [takeOver()]");	
 		}
@@ -184,10 +190,22 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				}
 				else{
 					EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
+					
+					// if no enemy in our base
 					if(enemyInfo == null){
-						log.log(Level.INFO, "Base clean - going to pick up some items [guardBase()]");
-						runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
-								InformationBase.BASE_SIZE));
+						// there are things to harvest - going harvest
+						if(informationBase.getTimeOfLastNothingToHarvest() - info.getTime() > 
+								Harvest.TIME_BETWEEN_TWO_HARVEST_ATTEMPTS){
+							log.log(Level.INFO, "Base clean - going to pick up some items [guardBase()]");
+							runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
+									InformationBase.BASE_SIZE));
+						}
+						// nothing to harvest - take cover
+						else{
+							log.log(Level.INFO, "Base clean, nothing to pick up - going to find some hiding spot [guardBase()]");
+							runActivity(new TakePosition(informationBase, log, this, ctf.getOurBase().getLocation(), 
+									InformationBase.BASE_SIZE));
+						}
 					}
 					else{
 						log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [guardBase()]");
@@ -298,6 +316,32 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 		else{
 			log.log(Level.INFO, "Activity {0} finished, but {1} activities already finished this turn, we have to wait for a message from the world [childActivityFinished()]", 
 					new String[]{activityName, Integer.toString(numberOfActivitiesEndedThisTurn)});
+		}
+	}
+
+	private void harvestNearOurBase() {
+		// is our flag home ?
+		if(ctf.isOurFlagHome()){
+			// I see an enemy!
+			if(players.canSeeEnemies()){
+				log.log(Level.INFO, "Enemy - going to kill him [harvestNearOurBase()]");
+				runActivity(new FightEnemy(informationBase, log, this));
+			}
+			else{
+				EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
+				if(enemyInfo == null){
+					log.log(Level.INFO, "Base clean - going to pick up some items [harvestNearOurBase()]");
+					runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
+							Harvest.HARVEST_NEAR_BASE_DISTANCE_LIMIT));
+				}
+				else{
+					log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [harvestNearOurBase()]");
+					runActivity(new FightEnemy(informationBase, log, this, enemyInfo.getPlayer()));
+				}
+			}
+		}
+		else{
+			getBackOurFlag();
 		}
 	}
 

@@ -21,7 +21,6 @@ import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.Strategy;
 import com.fido.ctfbot.informations.players.FriendInfo;
-import cz.cuni.amis.pogamut.base.agent.navigation.IPathPlanner;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
@@ -104,17 +103,23 @@ public class StrategyPlanner extends CTFChampionModule{
 
 	private boolean steelEnemyFlag() {
 		HashMap<UnrealId,FriendInfo> friendsTmp = getCopyFriendInfo();
+		
+		// firs assign one bot to guard our flag
 		FriendInfo  nearestFriendToOurBae = informationBase.getFriends().get(
 				informationBase.getNearestFriendTo(ctf.getOurBase().getLocation()));
 		boolean commandIssued = issueCommand(nearestFriendToOurBae, Goal.GUARD_OUR_FLAG);
 		if(commandIssued){
 			friendsTmp.remove(nearestFriendToOurBae.getId());
+			
+			// then other to attack
 			FriendInfo  nearestFriendToEnemyBase = informationBase.getFriends().get(
 				informationBase.getNearestFriendTo(ctf.getEnemyBase().getLocation(), friendsTmp));
 			commandIssued = issueCommand(nearestFriendToEnemyBase, Goal.GET_ENEMY_FLAG);
 			if(commandIssued){
 				friendsTmp.remove(nearestFriendToEnemyBase.getId());
-				return issueCommand(new ArrayList<FriendInfo>(friendsTmp.values()), Goal.GUARD_OUR_FLAG);
+				
+				// then the last one to harvest near our base
+				return issueCommand(new ArrayList<FriendInfo>(friendsTmp.values()), Goal.HARVEST_NEAR_OUR_BASE);
 			}
 			else{
 				return false;
@@ -135,7 +140,14 @@ public class StrategyPlanner extends CTFChampionModule{
 		if(friend.getGoal() != goal){
 			log.log(Level.INFO, "Issueing command: {0} for {1} [issueCommand()]", 
 				new String[]{goal.toString(), friend.getName()});
-			return comunicationModule.sendCommand(friend, goal);
+			boolean commadIssued = comunicationModule.sendCommand(friend, goal);
+			if(commadIssued){
+				if(friend.isMe()){
+					bot.setGoal(goal);
+				}
+				friend.setGoal(goal);
+			}
+			return commadIssued;
 		}
 		else{
 			return true;
