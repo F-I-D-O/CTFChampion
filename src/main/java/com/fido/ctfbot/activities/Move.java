@@ -101,7 +101,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		// navigovate only if we don't navigating, or we navigating to different target
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(currentTarget)){
 			log.log(Level.INFO, "It's necessary to change the target [Move.run()]");
-            bot.getDebugTools().drawIntention(currentTarget);
+//            bot.getDebugTools().drawIntention(currentTarget);
 			navigation.navigate(currentTarget);
 			currentTargetReached = false;
 			log.log(Level.INFO, "Target changed [Move.run()]");

@@ -17,6 +17,7 @@
 package com.fido.ctfbot.activities;
 
 import com.fido.ctfbot.informations.InformationBase;
+import com.fido.ctfbot.informations.players.EnemyInfo;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
@@ -40,7 +41,9 @@ public class FightEnemy extends Activity {
 	private final WeaponPrefs weaponPrefs;
     
     
-    private Player chosenEmemy;
+    private final Player chosenEmemy;
+	
+	private final EnemyInfo chosenEmemyInfo;
 
 	
 	public Player getChosenEmemy() {
@@ -64,6 +67,7 @@ public class FightEnemy extends Activity {
 		shoot = informationBase.getShoot();
 		weaponPrefs = informationBase.getWeaponPrefs();
         chosenEmemy = players.getNearestVisibleEnemy();
+		chosenEmemyInfo  = informationBase.getEnemies().get(chosenEmemy.getId());
 	}
     
     public FightEnemy(InformationBase informationBase, LogCategory log, ICaller caller,
@@ -74,15 +78,21 @@ public class FightEnemy extends Activity {
 		shoot = informationBase.getShoot();
 		weaponPrefs = informationBase.getWeaponPrefs();
         chosenEmemy = enemy;
+		chosenEmemyInfo  = informationBase.getEnemies().get(chosenEmemy.getId());
 	}
 
 	@Override
 	public void run() {
 		
         if(chosenEmemy != null){
-            navigation.setFocus(chosenEmemy);
-            navigation.navigate(chosenEmemy);
-            shoot.shoot(weaponPrefs, chosenEmemy);
+			if(chosenEmemy.isVisible()){
+				navigation.setFocus(chosenEmemy);
+				navigation.navigate(chosenEmemy);
+				shoot.shoot(weaponPrefs, chosenEmemy);
+			}
+			else{
+				navigation.navigate(chosenEmemyInfo.getLastKnownLocation());
+			}
         }
         else{
             log.log(Level.WARNING, "Chosen enemy null [FightEnemy.start()]");

@@ -18,6 +18,7 @@ package com.fido.ctfbot.informations.players;
 
 import com.fido.ctfbot.informations.players.PlayerInfo;
 import com.fido.ctfbot.Goal;
+import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.StrategyPlanner;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
@@ -30,6 +31,7 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
  * @author Fido
  */
 public class FriendInfo extends PlayerInfo{
+	
 	
 	private final AgentInfo info;
 	
@@ -47,20 +49,20 @@ public class FriendInfo extends PlayerInfo{
 	}
 	
 
-	public FriendInfo(Player player, Players players) {
-		super(player.getId(), player, player.getLocation(), players);
+	public FriendInfo(InformationBase informationBase, Player player, Players players) {
+		super(informationBase, null, 0, player.getId(), player, players);
 		this.info = null;
 		init();
 	}
 	
-	public FriendInfo(UnrealId playerId, Players players) {
-		super(playerId, null, null, players);
+	public FriendInfo(InformationBase informationBase, UnrealId playerId, Players players) {
+		super(informationBase, null, 0, playerId, null, players);
 		this.info = null;
 		init();
 	}
 	
-	public FriendInfo(AgentInfo info, Players players) {
-		super(info.getId(), null, info.getLocation(), players);
+	public FriendInfo(InformationBase informationBase, AgentInfo info, Players players) {
+		super(informationBase, info.getLocation(), info.getTime(), info.getId(), null, players);
 		this.info = info;
 		init();
 	}
@@ -102,4 +104,6 @@ public class FriendInfo extends PlayerInfo{
 	public boolean isMe(){
 		return info != null;
 	}
+
+
 }

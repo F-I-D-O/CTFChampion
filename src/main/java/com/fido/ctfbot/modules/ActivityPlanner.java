@@ -156,7 +156,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				runActivity(new Move(informationBase, log, this, ctf.getOurBase().getLocation()));
 			} 
 			else {
-				Location enemyFlagLocation = enemyFlagInfo.getRecentLocation();
+				Location enemyFlagLocation = enemyFlagInfo.getBestLocation();
 				
 				//TODO - napsat akci pro pripad, ze nese vlajku dalsi clen tymu
 				
@@ -184,11 +184,11 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 			// am I in our base ?
 			if(informationBase.AmIInOurBase()){
 				// I see an enemy in our base!
-				if(players.canSeeEnemies()){
-					log.log(Level.INFO, "Enemy in our base - going to kill him [guardBase()]");
-					runActivity(new FightEnemy(informationBase, log, this));
-				}
-				else{
+//				if(players.canSeeEnemies()){
+//					log.log(Level.INFO, "Enemy in our base - going to kill him [guardBase()]");
+//					runActivity(new FightEnemy(informationBase, log, this));
+//				}
+//				else{
 					EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
 					
 					// if no enemy in our base
@@ -211,7 +211,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 						log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [guardBase()]");
 						runActivity(new FightEnemy(informationBase, log, this, enemyInfo.getPlayer()));
 					}
-				}
+//				}
 			}
 			else{
 				log.log(Level.INFO, "We are not in our base, going to our base [guardBase()]");
@@ -323,11 +323,11 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 		// is our flag home ?
 		if(ctf.isOurFlagHome()){
 			// I see an enemy!
-			if(players.canSeeEnemies()){
-				log.log(Level.INFO, "Enemy - going to kill him [harvestNearOurBase()]");
-				runActivity(new FightEnemy(informationBase, log, this));
-			}
-			else{
+//			if(players.canSeeEnemies()){
+//				log.log(Level.INFO, "Enemy - going to kill him [harvestNearOurBase()]");
+//				runActivity(new FightEnemy(informationBase, log, this));
+//			}
+//			else{
 				EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
 				if(enemyInfo == null){
 					log.log(Level.INFO, "Base clean - going to pick up some items [harvestNearOurBase()]");
@@ -338,7 +338,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 					log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [harvestNearOurBase()]");
 					runActivity(new FightEnemy(informationBase, log, this, enemyInfo.getPlayer()));
 				}
-			}
+//			}
 		}
 		else{
 			getBackOurFlag();

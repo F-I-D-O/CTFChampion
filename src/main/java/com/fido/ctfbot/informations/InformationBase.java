@@ -21,6 +21,7 @@ import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.ItemDistanceComparator;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
+import com.fido.ctfbot.informations.flags.FlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
 import com.fido.ctfbot.informations.players.PlayerInfo;
@@ -279,12 +280,12 @@ public final class InformationBase {
 		}
 		else{
 			if(players.getFriends().get(id) != null){
-				FriendInfo friendInfo = new FriendInfo(player, players);
+				FriendInfo friendInfo = new FriendInfo(this, player, players);
 				friends.put(id, friendInfo);
 				allPlayersInfo.put(id, friendInfo);
 			}
 			else if(players.getEnemies().get(id) != null){
-				EnemyInfo enemyInfo = new EnemyInfo(player, players);
+				EnemyInfo enemyInfo = new EnemyInfo(this, player, players);
 				enemies.put(player.getId(), enemyInfo);
 				allPlayersInfo.put(player.getId(), enemyInfo);
 			}
@@ -292,42 +293,43 @@ public final class InformationBase {
 	}
 	
 	private void addBlankFriend(UnrealId id){
-		FriendInfo friendInfo = new FriendInfo(id, players);
+		FriendInfo friendInfo = new FriendInfo(this, id, players);
 		friends.put(id, friendInfo);
 		allPlayersInfo.put(id, friendInfo);
 		numberOfNotConnectedPlayers++;
 	}
 	
 	private void addBlankEnemy(UnrealId id){
-		EnemyInfo enemyInfo = new EnemyInfo(id, players);
+		EnemyInfo enemyInfo = new EnemyInfo(this, id, players);
 		enemies.put(id, enemyInfo);
 		allPlayersInfo.put(id, enemyInfo);
 		numberOfNotConnectedPlayers++;
 	}
 	
 	public void addSelf() {
-		FriendInfo friendInfo = new FriendInfo(info, players);
+		FriendInfo friendInfo = new FriendInfo(this, info, players);
 		friends.put(info.getId(), friendInfo);
 		allPlayersInfo.put(info.getId(), friendInfo);
 	}
 	
 	public void addPlayersAlreadyInGame(){
 		for(Player friend : players.getFriends().values()){
-			FriendInfo friendInfo = new FriendInfo(friend, players);
+			FriendInfo friendInfo = new FriendInfo(this, friend, players);
 			friends.put(friend.getId(), friendInfo);
 			allPlayersInfo.put(friend.getId(), friendInfo);
 		}
 		
 		for(Player enemy : players.getEnemies().values()){
-			EnemyInfo enemyInfo = new EnemyInfo(enemy, players);
+			EnemyInfo enemyInfo = new EnemyInfo(this, enemy, players);
 			enemies.put(enemy.getId(), enemyInfo);
 			allPlayersInfo.put(enemy.getId(), enemyInfo);
 		}
 	}
 	
 	public UnrealId getNearestFriendTo(Location nearestTo, HashMap<UnrealId, FriendInfo> friends){
-		double minDistance = getDistance(info.getLocation(), nearestTo);
-		UnrealId minDistanceFriendId = info.getId();
+		FriendInfo randomFriend = friends.entrySet().iterator().next().getValue();
+		double minDistance = getDistance(randomFriend.getBestLocation(), nearestTo);
+		UnrealId minDistanceFriendId = randomFriend.getId();
 		for(FriendInfo friend : friends.values()){
 			log.log(Level.INFO, "player {0} checked for distance: [getNearestFriendTo()]", friend.getName());
 			double distance = getDistance(friend.getBestLocation(), nearestTo);
@@ -500,6 +502,17 @@ public final class InformationBase {
 			return false;
 		}
 		return true;
+	}
+
+	public void updateFlagLocation(InfoType infoType, Location location) {
+		FlagInfo flagInfo = infoType == InfoType.OUR_FLAG ? ourFlagInfo : enemyFlagInfo;
+		
+		flagInfo.setLastKnownLocation(location);
+		flagInfo.setLastKnownLocationTime(info.getTime());
+	}
+	
+	public int getNumberOfBotsInGame(){
+		return allPlayersInfo.size();
 	}
 	
 }

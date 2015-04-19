@@ -16,6 +16,8 @@
  */
 package com.fido.ctfbot.informations.players;
 
+import com.fido.ctfbot.informations.InformationBase;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
@@ -26,14 +28,12 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
  */
 public class EnemyInfo extends PlayerInfo{
 
-	public EnemyInfo(Player player, Players players) {
-		super(player.getId(), player, player.getLocation(), players);
+	public EnemyInfo(InformationBase informationBase, Player player, Players players) {
+		super(informationBase, null, 0, player.getId(), player, players);
 	}
 
-	public EnemyInfo(UnrealId id, Players players) {
-		super(id, null, null, players);
-	}
-	
-	
+	public EnemyInfo(InformationBase informationBase, UnrealId id, Players players) {
+		super(informationBase, null, 0, id, null, players);
+	}	
 	
 }

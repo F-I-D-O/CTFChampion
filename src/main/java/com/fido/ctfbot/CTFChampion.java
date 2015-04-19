@@ -1,9 +1,11 @@
 package com.fido.ctfbot;
 
 
+import com.fido.ctfbot.informations.InfoType;
 import com.fido.ctfbot.modules.NavigationUtils;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
+import com.fido.ctfbot.informations.flags.FlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.modules.StrategyPlanner;
@@ -16,7 +18,6 @@ import com.fido.ctfbot.messages.PickupMessage;
 import com.fido.ctfbot.messages.RequestMessage;
 import com.fido.ctfbot.modules.DebugTools;
 import cz.cuni.amis.introspection.java.JProp;
-import cz.cuni.amis.pogamut.base.agent.module.LogicModule;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.ObjectClassEventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
@@ -39,7 +40,6 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.PlayerJoinsGame;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Self;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004BotTCController;
-import cz.cuni.amis.pogamut.ut2004.utils.UnrealUtils;
 import cz.cuni.amis.utils.Cooldown;
 import cz.cuni.amis.utils.exception.PogamutException;
 import java.util.logging.Level;
@@ -118,6 +118,8 @@ public class CTFChampion extends UT2004BotTCController {
     private long   logicIterationNumber = 0;    
 	
 	private final Cooldown sendEnemyPositionMessageCooldown = new Cooldown(1000);
+	
+	private final Cooldown sendFlagPositionMessageCooldown = new Cooldown(500);
 	
 	
 	
@@ -235,6 +237,11 @@ public class CTFChampion extends UT2004BotTCController {
 			case ENEMY:
 				informationBase.updateEnemyLocation(locationMessage.getUnrealId(), locationMessage.getLocation());
 				break;
+				
+			case OUR_FLAG:
+			case ENEMY_FLAG:
+				informationBase.updateFlagLocation(locationMessage.getInfoType(), locationMessage.getLocation());
+				break;
 		}
 	   
     }
@@ -315,6 +322,36 @@ public class CTFChampion extends UT2004BotTCController {
 				comunicationModule.sendEnemyMessage(player);
 				sendEnemyPositionMessageCooldown.use();
 			}
+		}
+    }
+	
+	@ObjectClassEventListener(eventClass = WorldObjectUpdatedEvent.class, 
+			objectClass = cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo.class)
+    protected void flagInfoUpdated(
+			WorldObjectUpdatedEvent<cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo> event) {
+        cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag = event.getObject();
+		
+        // First flagInfo objects are received in HandShake - at that time we don't have Self message yet or flagInfo location!!
+        if (flag.getLocation() == null || info.getLocation() == null) {
+            return;
+        }
+		
+		// we only have to update enemy, because friends reports about themaselfes
+		FlagInfo flagInfo;
+		InfoType infoType;
+		if(informationBase.getOurFlagInfo().getFlag().getId().equals(flag.getId())){
+			flagInfo =  informationBase.getOurFlagInfo();
+			infoType = InfoType.OUR_FLAG;
+		}
+		else{
+			flagInfo = informationBase.getEnemyFlagInfo();
+			infoType = InfoType.ENEMY_FLAG;
+		}
+		flagInfo.setLastKnownLocation(flag.getLocation());
+		flagInfo.setLastKnownLocationTime(info.getTime());
+		if(sendFlagPositionMessageCooldown.isCool()){
+			comunicationModule.sendFlagMessage(flag, infoType);
+			sendEnemyPositionMessageCooldown.use();
 		}
     }
 	
@@ -493,9 +530,9 @@ public class CTFChampion extends UT2004BotTCController {
 		}
         else{
             log.log(Level.INFO, "There are not enough players in game. Number of bots in game: {0}.", 
-                    informationBase.getNumberOfNotConnectedPlayers());
+                    informationBase.getNumberOfBotsInGame());
         }
-		
+
 		sendLocationMessage(); 
     }
 
@@ -598,8 +635,6 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		actionPlanner.init(activityPlanner);
 		activityPlanner.init(actionPlanner);
-		
-		
 	}
 	
 	public void setName(String state){
@@ -624,7 +659,7 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		// there we expecttwo teams and human player as observer.
 		if(informationBase.getFriends().size() + informationBase.getEnemies().size() == 
-				InformationBase.TEAM_SIZE  + 1){
+				InformationBase.TEAM_SIZE * 2 + 1){
 			allBotsInGame = true;
 			return true;
 		}

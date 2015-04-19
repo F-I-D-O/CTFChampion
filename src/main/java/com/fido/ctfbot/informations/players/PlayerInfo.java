@@ -17,6 +17,8 @@
 package com.fido.ctfbot.informations.players;
 
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.informations.InformationBase;
+import com.fido.ctfbot.informations.LocationInfo;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
@@ -27,7 +29,10 @@ import java.util.logging.Level;
  *
  * @author Fido
  */
-public abstract class PlayerInfo {
+public abstract class PlayerInfo extends LocationInfo {
+	
+	public static final double PLAYER_LOCATION_EXPIRE_TIME = 5;
+	
 	
 	/**
 	 * Id of player. Cannot be null.
@@ -41,9 +46,6 @@ public abstract class PlayerInfo {
 	 */
 	protected Player player;
 	
-	protected Location lastKnownLocation;
-	
-	private double lastKnownLocationTime;
 	
 	
 	
@@ -55,10 +57,6 @@ public abstract class PlayerInfo {
 		this.lastKnownLocation = lastKnownLocation;
 	}
 
-	public double getLastKnownLocationTime() {
-		return lastKnownLocationTime;
-	}
-
 	public void setLastKnownLocationTime(double lastKnownLocationTime) {
 		this.lastKnownLocationTime = lastKnownLocationTime;
 	}
@@ -68,7 +66,9 @@ public abstract class PlayerInfo {
 	
 	
 
-	public PlayerInfo(UnrealId playerId, Player player, Location lastKnownLocation, Players players) {
+	public PlayerInfo(InformationBase informationBase, Location lastKnownLocation, double lastKnownLocationTime, 
+			UnrealId playerId, Player player, Players players) {
+		super(informationBase, lastKnownLocation, lastKnownLocationTime);
 		this.players = players;
 		this.player = player;
 		this.playerId = playerId;
@@ -78,24 +78,7 @@ public abstract class PlayerInfo {
 			CTFChampion.logStatic.log(Level.INFO, 
 					"Creating player with null location, zero location added instead [PlayerInfo()]"); 
 		}
-		else{
-			this.lastKnownLocation = lastKnownLocation;
-		}
 	}
-	
-	
-	public Location getBestLocation(){
-		
-		// we don't see the player, returns last known location
-		if(players.getVisiblePlayer(playerId) == null){
-			return lastKnownLocation;
-		}
-		// return exact location
-		else{
-			return players.getVisiblePlayer(playerId).getLocation();
-		}
-	}
-	
 	
 	public String getName(){
 		
@@ -116,5 +99,16 @@ public abstract class PlayerInfo {
 					"Player {0} connected. [connectPlayer()]", getName()); 
 	}
 	
+	@Override
+	protected Location getActualLocation() {
+		if(player != null && player.isVisible()){
+			return player.getLocation();
+		}
+		return null;
+	}
 	
+	@Override
+	protected boolean lastKnownLocationTimeExpired() {
+		return informationBase.getInfo().getTime() - lastKnownLocationTime < PLAYER_LOCATION_EXPIRE_TIME;
+	}
 }

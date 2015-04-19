@@ -22,7 +22,7 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
  *
  * @author Fido
  */
-public abstract class LocationInfo extends Info{
+public abstract class LocationInfo extends Info {
 	
 	protected Location lastKnownLocation;
     
@@ -39,6 +39,16 @@ public abstract class LocationInfo extends Info{
 		return lastKnownLocationTime;
 	}
 
+	public void setLastKnownLocation(Location lastKnownLocation) {
+		this.lastKnownLocation = lastKnownLocation;
+	}
+
+	public void setLastKnownLocationTime(double lastKnownLocationTime) {
+		this.lastKnownLocationTime = lastKnownLocationTime;
+	}
+	
+	
+
 	
 	
 	
@@ -49,7 +59,7 @@ public abstract class LocationInfo extends Info{
 	}
 	
 	
-	public Location getRecentLocation(){
+	public Location getBestLocation(){
 		Location actualLocation = getActualLocation();
 		if(actualLocation == null){
 			if(lastKnownLocationTimeExpired()){

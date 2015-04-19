@@ -30,6 +30,7 @@ import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004TCClient;
 import java.util.logging.Level;
@@ -107,5 +108,14 @@ public class ComunicationModule extends CTFChampionModule {
 		
 		log.log(Level.INFO, "Sending request message: [sendRequest()]");
 		teamComClient.sendToTeamOthers(new RequestMessage(requestType, informationBase.getInfo().getId()));
+	}
+
+	public void sendFlagMessage(FlagInfo flag, InfoType infoType) {
+		if(!isTeamComReady()){
+			return;
+		}
+		
+		log.log(Level.INFO, "Sending flag message: [sendFlagMessage()]");
+		teamComClient.sendToTeamOthers(new LocationMessage(flag.getLocation(), flag.getId(), infoType));
 	}
 }
