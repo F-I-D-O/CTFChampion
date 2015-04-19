@@ -20,12 +20,15 @@ import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.pathfollowing.NavMeshNavigation;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -75,6 +78,15 @@ public class NavigationUtils extends CTFChampionModule {
 	public void navigate(Location target){
 		log.log(Level.INFO, "Navigating to {0} [navigate()]", target);
 		bot.getMainNavigation().navigate(target);
+	}
+
+	public boolean isNavPointOccupied(NavPoint navpoint) {
+		for (Player player : bot.getPlayers().getVisiblePlayers().values()) {
+			if(player.getLocation().equals(navpoint.getLocation())){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

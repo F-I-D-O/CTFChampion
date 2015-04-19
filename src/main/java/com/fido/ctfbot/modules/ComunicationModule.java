@@ -18,6 +18,8 @@ package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
+import com.fido.ctfbot.messages.RequestMessage;
+import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.informations.InfoType;
@@ -96,5 +98,14 @@ public class ComunicationModule extends CTFChampionModule {
 		}
 		log.log(Level.INFO, "Sending enemy message: [sendEnemyMessage()]");
 		teamComClient.sendToTeamOthers(new LocationMessage(player.getLocation(), player.getId(), InfoType.ENEMY));
+	}
+
+	public void sendRequest(RequestType requestType) {
+		if(!isTeamComReady()){
+			return;
+		}
+		
+		log.log(Level.INFO, "Sending request message: [sendRequest()]");
+		teamComClient.sendToTeamOthers(new RequestMessage(requestType, informationBase.getInfo().getId()));
 	}
 }

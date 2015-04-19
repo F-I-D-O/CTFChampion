@@ -13,6 +13,7 @@ import com.fido.ctfbot.modules.ActionPlanner;
 import com.fido.ctfbot.messages.CommandMessage;
 import com.fido.ctfbot.messages.LocationMessage;
 import com.fido.ctfbot.messages.PickupMessage;
+import com.fido.ctfbot.messages.RequestMessage;
 import com.fido.ctfbot.modules.DebugTools;
 import cz.cuni.amis.introspection.java.JProp;
 import cz.cuni.amis.pogamut.base.agent.module.LogicModule;
@@ -171,6 +172,10 @@ public class CTFChampion extends UT2004BotTCController {
 	public long getLogicIterationNumber() {
 		return logicIterationNumber;
 	}
+
+	public ComunicationModule getComunicationModule() {
+		return comunicationModule;
+	}
 	
     
 	
@@ -201,9 +206,18 @@ public class CTFChampion extends UT2004BotTCController {
 					   commandMessage.getTargetPlayerId());
 		   }
 	   }
-	   LogicModule module;
-	   
     }
+	
+	@EventListener(eventClass = RequestMessage.class)
+    public void onRequestAquired(RequestMessage requestMessage){
+       log.log(Level.INFO, "Request aquired: {0}", requestMessage.getLogInfo()); 
+	   
+	   // process request - only for leader
+	   if(isLeader()){
+		   log.log(Level.INFO, "Going to process request: {0}", requestMessage.getRequestType()); 
+		   strategyPlanner.queueRequest(requestMessage);
+	   }
+	}
 	
 	@EventListener(eventClass = LocationMessage.class)
     public void onLocationAcquired(LocationMessage locationMessage){
@@ -482,7 +496,7 @@ public class CTFChampion extends UT2004BotTCController {
                     informationBase.getNumberOfNotConnectedPlayers());
         }
 		
-		sendLocationMessage();
+		sendLocationMessage(); 
     }
 
 //	private void dealWithEnemis() {
@@ -615,5 +629,14 @@ public class CTFChampion extends UT2004BotTCController {
 			return true;
 		}
 		return false;
+	}
+
+	public void request(RequestType requestType) {
+		if(isLeader()){
+			strategyPlanner.processRequest(requestType);
+		}
+		else{
+			comunicationModule.sendRequest(requestType);
+		}
 	}
 }

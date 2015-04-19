@@ -16,6 +16,7 @@
  */
 package com.fido.ctfbot.activities;
 
+import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
 import com.fido.ctfbot.informations.ItemTypeInfo;
@@ -95,7 +96,10 @@ public class Harvest extends HighLevelActivity {
 			if(harvestingPriorities.isEmpty()){
 				log.log(Level.INFO, "Nothing to harvest [Harvest.run()]");
 				informationBase.setTimeOfLastNothingToHarvest(informationBase.getInfo().getTime());
-				caller.childActivityFinished();
+				if(informationBase.amIArmed()){
+					bot.request(RequestType.END_HARVEST);
+					caller.childActivityFinished();
+				}
 			}
 			else{
 				chosenItem = harvestingPriorities.get(0);

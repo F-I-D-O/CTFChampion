@@ -17,6 +17,7 @@
 package com.fido.ctfbot.activities;
 
 import com.fido.ctfbot.informations.InformationBase;
+import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
@@ -42,6 +43,8 @@ public class TakePosition extends HighLevelActivity {
 	private final AdvancedLocomotion move;
 	
 	
+	private final NavigationUtils navigationUtils;
+	
 	private final Location nearTo;
 	
 	private double maxDistance = 0;
@@ -62,6 +65,8 @@ public class TakePosition extends HighLevelActivity {
 		navPoints = informationBase.getNavPoints();
 		info = informationBase.getInfo();
 		move = bot.getMove();
+		
+		navigationUtils = bot.getNavigationUtils();
 		this.nearTo = nearTo;
 	}
 	
@@ -72,6 +77,8 @@ public class TakePosition extends HighLevelActivity {
 		navPoints = informationBase.getNavPoints();
 		info = informationBase.getInfo();
 		move = bot.getMove();
+		
+		navigationUtils = bot.getNavigationUtils();
 		this.nearTo = nearTo;
 		this.maxDistance = maxDistance;
 	}
@@ -131,9 +138,16 @@ public class TakePosition extends HighLevelActivity {
 							if(navpoint.isVisible()){
 								log.log(Level.INFO, "Checking visible navpoint: {0}[TakePosition.calculatePosition()]", 
 										navpoint.getLocation());
-								return  (maxDistance == 0 || 
+								
+								return  // distance test
+										(maxDistance == 0 || 
 											bot.getNavigationUtils().getDistance(nearTo, navpoint.getLocation()) 
 												< maxDistance) && 
+										
+										// point not used test
+										!navigationUtils.isNavPointOccupied(navpoint) &&
+										
+										// point quality test
 										(navpoint.isAIMarker() || navpoint.getIncomingEdges().size() <= numberOfEdges);
 							}
 							return false;

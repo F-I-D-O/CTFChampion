@@ -18,6 +18,7 @@ package com.fido.ctfbot.informations;
 
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.ItemDistanceComparator;
 import com.fido.ctfbot.informations.flags.EnemyFlagInfo;
 import com.fido.ctfbot.informations.flags.OurFlagInfo;
@@ -480,6 +481,25 @@ public final class InformationBase {
 			enemyInfo.setLastKnownLocationTime(info.getTime());
 			log.log(Level.INFO, "Enemy {0} location updated. [updateEnemyLocation()]", unrealId);
 		}
+	}
+
+	public FriendInfo getFrindByGoal(Goal goal) {
+		for (Map.Entry<UnrealId, FriendInfo> entrySet : friends.entrySet()) {
+			FriendInfo friendInfo = entrySet.getValue();
+			if(friendInfo.getGoal() == goal){
+				return friendInfo;
+			}
+		}
+		return null;
+	}
+
+	public boolean amIArmed() {
+		if(
+				// enough weapons test
+				weaponry.getLoadedRangedWeapons().size() < 3){
+			return false;
+		}
+		return true;
 	}
 	
 }

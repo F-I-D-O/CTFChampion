@@ -18,12 +18,15 @@ package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
+import com.fido.ctfbot.messages.RequestMessage;
+import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.Strategy;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
+import cz.cuni.amis.utils.Cooldown;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -36,8 +39,10 @@ public class StrategyPlanner extends CTFChampionModule{
 	
 	public static final Goal DEFAULT_STARTUP_GOAL = Goal.GUARD_OUR_FLAG;
 	
-	private final CTF ctf;
 	
+	
+	
+	private final CTF ctf;
 	
 	
 	private final ComunicationModule comunicationModule;
@@ -46,6 +51,10 @@ public class StrategyPlanner extends CTFChampionModule{
 	
 	private boolean strategyApplied;
 	
+	private final ArrayList<RequestMessage> playerRequests;
+	
+	private final Cooldown exchangeGuardingRolesCooldown = new Cooldown(10000);
+	
 
 	
 	public StrategyPlanner(CTFChampion bot, LogCategory log, ComunicationModule comunicationModule,
@@ -53,6 +62,7 @@ public class StrategyPlanner extends CTFChampionModule{
 		super(bot, log, informationBase);
 		this.comunicationModule = comunicationModule;
 		this.ctf = informationBase.getCtf();
+		playerRequests = new ArrayList<RequestMessage>();
 	}
 	
 	public void makeStrategy(){
@@ -77,6 +87,10 @@ public class StrategyPlanner extends CTFChampionModule{
 			if(!strategyApplied){
 				log.log(Level.INFO, "Applying new strategy wasn not succesful: {0} [applyStrategy()]", nextStrategy);
 			}
+		}
+		else{
+			// we only process bot requests if strategy wasn|t changed
+			processRequests();
 		}
 		
 //		if(bot.testHeatup.isCool()){
@@ -172,5 +186,54 @@ public class StrategyPlanner extends CTFChampionModule{
         
         return commandIssued;
     }
+
+	private void processRequests() {
+		for (RequestMessage playerRequest : playerRequests) {
+			boolean requestAccepted = processRequest(playerRequest);
+			
+			// we only accept one request a turn
+			if(requestAccepted){
+				break;
+			}
+		}
+	}
+
+	private boolean processRequest(RequestMessage playerRequest) {
+		switch(playerRequest.getRequestType()){
+			case END_HARVEST:
+				return processHarvestRequest(playerRequest);
+			default:
+				log.log(Level.WARNING, "Illegal request: {0} [processRequest()]", playerRequest.getRequestType());
+				return false;
+		}
+	}
+	
+	public boolean processRequest(RequestType playerRequest) {
+		return processHarvestRequest(new RequestMessage(playerRequest, informationBase.getInfo().getId()));
+	}
+
+	private boolean processHarvestRequest(RequestMessage playerRequest) {
+		boolean commandIssued;
+		if(exchangeGuardingRolesCooldown.isCool()){
+			exchangeGuardingRolesCooldown.use();
+			commandIssued = issueCommand(informationBase.getFrindByGoal(Goal.GUARD_OUR_FLAG), Goal.HARVEST_NEAR_OUR_BASE);
+			
+			if(commandIssued){
+				commandIssued = issueCommand(informationBase.getFriends().get(playerRequest.getPlayerId()), 
+									Goal.GUARD_OUR_FLAG);
+			}
+		}
+		else{
+			commandIssued = issueCommand(informationBase.getFriends().get(playerRequest.getPlayerId()), 
+					Goal.GUARD_OUR_FLAG);
+		}
+		return commandIssued;
+	}
+
+	public void queueRequest(RequestMessage requestMessage) {
+		playerRequests.add(requestMessage);
+		log.log(Level.INFO, "Request: {0} from player {1} added to queue [queueRequest()]", 
+				new String[]{requestMessage.getRequestType().toString(), requestMessage.getPlayerId().toString()});
+	}
 	
 }
