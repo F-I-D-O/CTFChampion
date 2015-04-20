@@ -477,6 +477,10 @@ public class CTFChampion extends UT2004BotTCController {
      */
     @Override
     public void beforeFirstLogic() {
+        if(isLeader()){
+            debugTools.drawNavMesh();
+            debugTools.drawOffMeshLinks();
+        }
     }
     
     private void sayGlobal(String msg) {

@@ -168,12 +168,6 @@ public class Harvest extends HighLevelActivity {
 		log.log(Level.INFO, "Calculating harvesting priorities - end [Harvest.callculateHarvestingPriority()]");
 	}
 
-	@Override
-	public void childActivityFinished() {
-		super.childActivityFinished();
-		this.run();
-	}
-
 	private void debugRemovalCause(ItemInfo itemInfo) {
 		if(!items.isPickable(itemInfo.getItem())){
 			log.log(Level.INFO, "Item removed because it's not pickable: {0} [Harvest.debugRemovalCause()]", itemInfo.getItem());

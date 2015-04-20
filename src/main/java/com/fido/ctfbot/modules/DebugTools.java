@@ -20,8 +20,10 @@ import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.InformationBase;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.NavMeshModule;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.drawing.UT2004Draw;
 import java.awt.Color;
+import java.util.logging.Level;
 
 /**
  *
@@ -34,10 +36,13 @@ public class DebugTools extends CTFChampionModule {
     
     private final UT2004Draw draw;
     
+    private final NavMeshModule nmModule; 
+    
 
     public DebugTools(CTFChampion bot, LogCategory log, InformationBase informationBase, UT2004Draw draw) {
         super(bot, log, informationBase);
         this.draw = draw;
+        nmModule = bot.getNavMeshModule();
     }
     
     /**
@@ -61,4 +66,57 @@ public class DebugTools extends CTFChampionModule {
 		draw.clearAll();
 	}
     
+    public boolean drawNavMesh() { 
+    		log.log(Level.INFO, "Drawing NavMesh...");
+    		nmModule.getNavMeshDraw().clearAll();
+    		nmModule.getNavMeshDraw().draw(true, false);
+    		log.log(Level.INFO, "Okey, drawing commands issued, now we have to wait a bit till it gets drawn completely...");
+    		
+//    		waitForMesh = navMeshModule.getNavMesh().getPolys().size() / 35;
+//    		waitingForMesh = -info.getTimeDelta();
+//    	
+//		
+//		if (waitForMesh > 0) {
+//    		waitForMesh -= info.getTimeDelta();
+//    		waitingForMesh += info.getTimeDelta();
+//    		if (waitingForMesh > 2) {
+//    			waitingForMesh = 0;
+//    			say(((int)Math.round(waitForMesh)) + "s...");
+//    		}
+//    		if (waitForMesh > 0) {
+//    			return false;
+//    		}    		
+//    	}
+		
+		return true;
+	}
+    
+    public boolean drawOffMeshLinks() { 		
+		
+			if (nmModule.getNavMesh().getOffMeshPoints().isEmpty()) {
+				log.log(Level.INFO, "Ha! There are no off-mesh points / links within this map!");
+				return true;
+			}
+			
+			log.log(Level.INFO, "Drawing OffMesh Links...");
+    		nmModule.getNavMeshDraw().draw(false, true);
+    		log.log(Level.INFO, "Okey, drawing commands issued, now we have to wait a bit till it gets drawn completely...");    		
+//    		waitForOffMeshLinks = navMeshModule.getNavMesh().getOffMeshPoints().size() / 10;
+//    		waitingForOffMeshLinks = -info.getTimeDelta();
+
+		
+//		if (waitForOffMeshLinks > 0) {
+//			waitForOffMeshLinks -= info.getTimeDelta();
+//			waitingForOffMeshLinks += info.getTimeDelta();
+//    		if (waitingForOffMeshLinks > 2) {
+//    			waitingForOffMeshLinks = 0;
+//    			say(((int)Math.round(waitForOffMeshLinks)) + "s...");
+//    		}
+//    		if (waitForOffMeshLinks > 0) {
+//    			return false;
+//    		}    		
+//    	}
+		
+		return true;
+	}
 }

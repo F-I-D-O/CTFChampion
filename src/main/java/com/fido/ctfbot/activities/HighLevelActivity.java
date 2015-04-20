@@ -27,6 +27,8 @@ import java.util.logging.Level;
 public abstract class HighLevelActivity extends Activity implements ICaller {
 	
 	protected Activity currentChildActivity;
+    
+    private int numberOfActivitiesEndedThisTurn;
 
 	public HighLevelActivity(InformationBase informationBase, LogCategory log, ICaller caller) {
 		super(informationBase, log, caller);
@@ -59,7 +61,20 @@ public abstract class HighLevelActivity extends Activity implements ICaller {
 	@Override
 	public void childActivityFinished() {
 		currentChildActivity.end();
+        String activityName = currentChildActivity.getName();
 		currentChildActivity = null;
+        numberOfActivitiesEndedThisTurn++;
+        
+        // neverending cycle detection, sometimes we hve to wait for a message from world
+		if(numberOfActivitiesEndedThisTurn < 2){
+			log.log(Level.INFO, "Activity {0} finished, another activity will be started [childActivityFinished()]", 
+					activityName);
+			this.run();
+		}
+		else{
+			log.log(Level.INFO, "Activity {0} finished, but {1} activities already finished this turn, we have to wait for a message from the world [childActivityFinished()]", 
+					new String[]{activityName, Integer.toString(numberOfActivitiesEndedThisTurn)});
+		}
 	}
 	
 	
