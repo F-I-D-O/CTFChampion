@@ -19,9 +19,11 @@ package com.fido.ctfbot.activities;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
 import com.fido.ctfbot.informations.RecentSpotedItems;
+import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
@@ -31,6 +33,8 @@ import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import cz.cuni.amis.utils.Cooldown;
+import cz.cuni.amis.utils.IFilter;
 import cz.cuni.amis.utils.flag.FlagListener;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -58,18 +62,26 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	
 	private final FloydWarshallMap fwMap;
 	
+	private final NavPoints navPoints;
+	
 	
 	
 	private final Location mainTarget;
 	
 	private final RecentSpotedItems recentSpotedItems;
 	
+	private final NavigationUtils navigationUtils;
+	
+	private final ArrayList<NavPoint> stuckHandleUsedNavpoints;
+	
 	
 	private Location currentTarget;
 	
 	private boolean currentTargetReached = false;
 	
-			
+	private Location referenceLocationForDetectingStuck;
+	
+	private final Cooldown stuckDetectCooldown = new Cooldown(1000);		
 	
 	
 	public Move(InformationBase informationBase, LogCategory log, ICaller caller, Location target) {
@@ -81,10 +93,15 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		this.info = informationBase.getInfo();
 		this.recentSpotedItems = informationBase.getRecentSpotedItems();
 		this.fwMap = informationBase.getFwMap();
+		navPoints = bot.getNavPoints();
         
+		navigationUtils = bot.getNavigationUtils();
         this.currentTarget = target;
 		this.mainTarget = target;
 		navigation.addStrongNavigationListener(this);
+		stuckHandleUsedNavpoints = new ArrayList<NavPoint>();
+		referenceLocationForDetectingStuck = info.getLocation();
+		stuckDetectCooldown.use();
 	}
 
 	@Override
@@ -118,7 +135,12 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 				shoot.stopShooting();
 			}
 		}
-		
+		if(stuckDetectCooldown.isCool()){
+			stuckDetectCooldown.use();
+			if(info.getLocation().equals(referenceLocationForDetectingStuck)){
+				handleStuck();
+			}
+		}
 	}
 
 	@Override
@@ -174,6 +196,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		switch (changedValue) {
 			case STUCK:
 				log.log(Level.WARNING, "We are stucked [Move.flagChanged()]");
+				handleStuck();
 				break;
 			case STOPPED:
 				log.log(Level.INFO, "Stopped [Move.flagChanged()]");
@@ -204,7 +227,31 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			}
 		}
 	}
-	
+
+	private void handleStuck() {
+		log.log(Level.SEVERE, "Stuck handled at position {0} [Move.handleStuck()]", currentTarget);
+		stuckHandleUsedNavpoints.add(navigation.getNearestNavPoint(currentTarget));
+		NavPoint newTargetNavpoint = 
+			fwMap.getNearestFilteredNavPoint(navPoints.getNavPoints().values(), info.getNearestNavPoint(), 
+				new IFilter<NavPoint>() {
+					int numberOfEdges;		
+
+					@Override
+					public boolean isAccepted(NavPoint navpoint) {
+						log.log(Level.INFO, "Checking navpoint: {0}[Move.handleStuck()]", 
+									navpoint.getLocation());
+						return  
+								// point not used test
+								!navigationUtils.isNavPointOccupied(navpoint) &&
+
+								// used navpoints test
+								!stuckHandleUsedNavpoints.contains(navpoint);
+					}
+				});
+		
+		currentTarget = newTargetNavpoint.getLocation(); 
+		log.log(Level.SEVERE, "New temp target chosen: {0} [Move.handleStuck()]", currentTarget);
+	}
 	
 	
 }

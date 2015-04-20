@@ -20,12 +20,14 @@ import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
 import com.fido.ctfbot.informations.ItemTypeInfo;
+import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -64,6 +66,8 @@ public class Harvest extends HighLevelActivity {
 	
 	private ItemInfo chosenItem;
 	
+	private final NavigationUtils navigationUtils;
+	
 
 	
 	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller) {
@@ -72,6 +76,8 @@ public class Harvest extends HighLevelActivity {
 		weaponry = informationBase.getWeaponry();
 		game = informationBase.getGame();
 		items = informationBase.getItems();
+		
+		navigationUtils = bot.getNavigationUtils();
 	}
 	
 	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller, Location searchingAreaCenter, 
@@ -82,6 +88,7 @@ public class Harvest extends HighLevelActivity {
 		game = informationBase.getGame();
 		items = informationBase.getItems();
 		
+		navigationUtils = bot.getNavigationUtils();
 		this.searchingAreaCenter = searchingAreaCenter;
 		this.maxDistance = maxDistance;
 	}
@@ -145,16 +152,20 @@ public class Harvest extends HighLevelActivity {
 		Iterator<ItemInfo> iterator = harvestingPriorities.iterator();
 		while (iterator.hasNext()) {
 			ItemInfo itemInfo = iterator.next(); 
+			
+			NavPoint itemNavPoint = itemInfo.getItem().getNavPoint();
 		  
 			// ze seznamu priorit zcela vyřadíme věci které nemůžemne sebrat, 
 			if(!items.isPickable(itemInfo.getItem()) || 
 					// které jsou nedosažitelné
-					!informationBase.isReachable(itemInfo.getItem().getNavPoint()) ||
+					!informationBase.isReachable(itemNavPoint) ||					
 					// nebo které ještě nejsou respawnované               
 					!itemInfo.isItemSpawned() ||
 					// or item is too far
 					searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
-							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance
+							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance ||
+					// point not used test
+					navigationUtils.isNavPointOccupied(itemNavPoint)
 					){
 				iterator.remove();
 				debugRemovalCause(itemInfo);

@@ -18,6 +18,7 @@ package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.InformationBase;
+import com.fido.ctfbot.informations.players.FriendInfo;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
@@ -82,10 +83,18 @@ public class NavigationUtils extends CTFChampionModule {
 
 	public boolean isNavPointOccupied(NavPoint navpoint) {
 		for (Player player : bot.getPlayers().getVisiblePlayers().values()) {
-			if(player.getLocation().equals(navpoint.getLocation())){
+			if(navpoint.getLocation().equals(player.getLocation())){
+				log.log(Level.INFO, "Navpoint at {0} is occupied - we see it [isNavPointOccupied()]", navpoint.getLocation());
 				return true;
 			}
 		}
+		for (FriendInfo friendInfo : informationBase.getFriends().values()) {
+			if(navpoint.getLocation().equals(friendInfo.getBestLocation())){
+				log.log(Level.INFO, "Navpoint at {0} is occupied - by friend [isNavPointOccupied()]", navpoint.getLocation());
+				return true;
+			}
+		}
+		log.log(Level.INFO, "Navpoint at {0} is free [isNavPointOccupied()]", navpoint.getLocation());
 		return false;
 	}
 	

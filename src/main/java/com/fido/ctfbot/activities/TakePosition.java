@@ -144,11 +144,11 @@ public class TakePosition extends HighLevelActivity {
 											bot.getNavigationUtils().getDistance(nearTo, navpoint.getLocation()) 
 												< maxDistance) && 
 										
-										// point not used test
-										!navigationUtils.isNavPointOccupied(navpoint) &&
-										
 										// point quality test
-										(navpoint.isAIMarker() || navpoint.getIncomingEdges().size() <= numberOfEdges);
+										(navpoint.isAIMarker() || navpoint.getIncomingEdges().size() <= numberOfEdges) &&
+								
+										// point not used test
+										!navigationUtils.isNavPointOccupied(navpoint);
 							}
 							return false;
 						}

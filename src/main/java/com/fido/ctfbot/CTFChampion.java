@@ -388,6 +388,8 @@ public class CTFChampion extends UT2004BotTCController {
 		System.out.println("prepareBot start"); 
 		mainNavigation = nmNav;
 		
+		initNavigationSetting();
+		
 		ititWeaponPreferences();
 		
 		initializeModules();		
@@ -424,6 +426,7 @@ public class CTFChampion extends UT2004BotTCController {
     @Override
     public void botInitialized(GameInfo gameInfo, ConfigChange currentConfig, InitedMessage init) {
 		log.info("botInitialized start"); 
+
 		
 		CTFChampion.logStatic = log;
 		
@@ -478,8 +481,8 @@ public class CTFChampion extends UT2004BotTCController {
     @Override
     public void beforeFirstLogic() {
         if(isLeader()){
-            debugTools.drawNavMesh();
-            debugTools.drawOffMeshLinks();
+//            debugTools.drawNavMesh();
+//            debugTools.drawOffMeshLinks();
         }
     }
     
@@ -678,4 +681,15 @@ public class CTFChampion extends UT2004BotTCController {
 			comunicationModule.sendRequest(requestType);
 		}
 	}
+
+	private void initNavigationSetting() {
+//		navMeshModule.setReloadNavMesh(true);
+	}
+
+	@Override
+	public void mapInfoObtained() {
+//		navBuilder.removeEdgesBetween("CTF-Citadel.PathNode99", "CTF-Citadel.JumpSpot27");
+	}
+	
+	
 }
