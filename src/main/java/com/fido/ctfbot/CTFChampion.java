@@ -659,7 +659,7 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		// there we expecttwo teams and human player as observer.
 		if(informationBase.getFriends().size() + informationBase.getEnemies().size() == 
-				InformationBase.TEAM_SIZE * 2 + 1){
+				InformationBase.TEAM_SIZE  + 1){
 			allBotsInGame = true;
 			return true;
 		}

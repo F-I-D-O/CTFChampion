@@ -153,7 +153,12 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 				double distanceToItem = fwMap.getDistance(info.getNearestNavPoint(), itemNavPoint);
 				double distanceFromItem = fwMap.getDistance(itemNavPoint, targetNavPoint);
 				double pathDistance = fwMap.getDistance(info.getNearestNavPoint(), targetNavPoint);
-				if(distanceToItem + distanceFromItem <= pathDistance + MAX_DISTANCE_INCREASE){
+				if(
+					// max increase test	
+					distanceToItem + distanceFromItem <= pathDistance + MAX_DISTANCE_INCREASE && 
+						
+					// short distance inverse test
+					distanceToItem + distanceFromItem < pathDistance + distanceFromItem){
 					currentTarget = item.getLocation();
 					recentSpotedItems.remove(item);
 					break;
