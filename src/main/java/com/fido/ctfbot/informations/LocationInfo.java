@@ -16,7 +16,9 @@
  */
 package com.fido.ctfbot.informations;
 
+import com.fido.ctfbot.CTFChampion;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import java.util.logging.Level;
 
 /**
  *
@@ -62,7 +64,12 @@ public abstract class LocationInfo extends Info {
 	public Location getBestLocation(){
 		Location actualLocation = getActualLocation();
 		if(actualLocation == null){
+			if(lastKnownLocation == null){
+				log.log(Level.WARNING, "Last known location is null!: {0}.");
+				return null;
+			}
 			if(lastKnownLocationTimeExpired() || informationBase.getInfo().atLocation(lastKnownLocation)){
+				log.log(Level.INFO, "Location expired: {0}.", lastKnownLocation);
 				return null;
 			}
 			else{

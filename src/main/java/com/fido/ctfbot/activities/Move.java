@@ -29,6 +29,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.NavigationState;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
+import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
 import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
@@ -64,6 +65,8 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	
 	private final NavPoints navPoints;
 	
+	private final AdvancedLocomotion move;
+	
 	
 	
 	private final Location mainTarget;
@@ -94,6 +97,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		this.recentSpotedItems = informationBase.getRecentSpotedItems();
 		this.fwMap = informationBase.getFwMap();
 		navPoints = bot.getNavPoints();
+		move = bot.getMove();
         
 		navigationUtils = bot.getNavigationUtils();
         this.currentTarget = target;
@@ -162,7 +166,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			ItemInfo itemInfo = informationBase.getItemInfo(item);
 			
 			boolean isWorthTaking = 
-					itemInfo == null ? ItemInfo.isWorthTakeWhileNavigating(item) : 
+					itemInfo == null ? informationBase.isWorthTakeWhileNavigating(item) : 
 						itemInfo.isWorthTakeWhileNavigating();
 	
 			if(isWorthTaking){
@@ -232,7 +236,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		log.log(Level.SEVERE, "Stuck handled at position {0} [Move.handleStuck()]", currentTarget);
 		stuckHandleUsedNavpoints.add(navigation.getNearestNavPoint(currentTarget));
 		NavPoint newTargetNavpoint = 
-			fwMap.getNearestFilteredNavPoint(navPoints.getNavPoints().values(), info.getNearestNavPoint(), 
+			fwMap.getNearestFilteredNavPoint(navPoints.getVisibleNavPoints().values(), info.getNearestNavPoint(), 
 				new IFilter<NavPoint>() {
 					int numberOfEdges;		
 
@@ -248,9 +252,14 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 								!stuckHandleUsedNavpoints.contains(navpoint);
 					}
 				});
-		
-		currentTarget = newTargetNavpoint.getLocation(); 
-		log.log(Level.SEVERE, "New temp target chosen: {0} [Move.handleStuck()]", currentTarget);
+		if(newTargetNavpoint != null){
+			currentTarget = newTargetNavpoint.getLocation(); 
+			log.log(Level.INFO, "New temp target chosen: {0} [Move.handleStuck()]", currentTarget);
+		}
+		else{
+			move.turnHorizontal(90);
+			log.log(Level.WARNING, "No new target chosen - trying to rotate [Move.handleStuck()]");
+		}
 	}
 	
 	

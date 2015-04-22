@@ -36,6 +36,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo;
+import cz.cuni.amis.utils.Cooldown;
 import java.util.logging.Level;
 
 /**
@@ -70,7 +71,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	
 	private int numberOfActivitiesEndedThisTurn = 0;
 	
-	
+	public final Cooldown tryToHarvestWhileGuardingCoolDown = new Cooldown(10000);
 	
 	
 	
@@ -192,7 +193,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 					// if no enemy in our base
 					if(enemyInfo == null){
 						// there are things to harvest - going harvest
-						if(currentActivity instanceof Harvest || Harvest.tryToHarvestWhileGuardingCoolDown.isCool()){
+						if(currentActivity instanceof Harvest || tryToHarvestWhileGuardingCoolDown.isCool()){
 							log.log(Level.INFO, "Base clean - going to pick up some items [guardBase()]");
 							runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
 									InformationBase.BASE_SIZE));

@@ -16,24 +16,46 @@
  */
 package com.fido.ctfbot.informations;
 
-import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 
 /**
  *
  * @author Fido
  */
-public abstract class Info {
-	
-	protected final InformationBase informationBase;
-	
-	protected final LogCategory log;
+public class HidingSpot extends Info {
 
-	public Info(InformationBase informationBase) {
-		this.informationBase = informationBase;
-		log = informationBase.getLog();
+	private final NavPoint position;
+	
+	private boolean used;
+
+	
+	
+	
+	
+	public boolean isUsed() {
+		return used;
+	}
+
+	public void setUsed(boolean used) {
+		this.used = used;
+	}
+
+	public NavPoint getPosition() {
+		return position;
 	}
 	
 	
 	
+	
+	
+	public HidingSpot(InformationBase informationBase, NavPoint position) {
+		this(informationBase, position, true);
+	}
+	
+	public HidingSpot(InformationBase informationBase, NavPoint position, boolean used) {
+		super(informationBase);
+		this.position = position;
+		this.used = used;
+	}
 	
 }

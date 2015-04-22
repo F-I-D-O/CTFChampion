@@ -34,11 +34,14 @@ public abstract class PlayerInfo extends LocationInfo {
 	public static final double PLAYER_LOCATION_EXPIRE_TIME = 5;
 	
 	
+	
+	protected final Players players;
+	
+	
+	
 	/**
 	 * Id of player. Cannot be null.
 	 */
-	protected final Players players;
-	
 	protected final UnrealId playerId;
 	
 	/**
@@ -53,16 +56,6 @@ public abstract class PlayerInfo extends LocationInfo {
 		return player;
 	}
 
-	public void setLastKnownLocation(Location lastKnownLocation) {
-		this.lastKnownLocation = lastKnownLocation;
-	}
-
-	public void setLastKnownLocationTime(double lastKnownLocationTime) {
-		this.lastKnownLocationTime = lastKnownLocationTime;
-	}
-	
-	
-	
 	
 	
 
@@ -75,7 +68,7 @@ public abstract class PlayerInfo extends LocationInfo {
 		
 		if(lastKnownLocation == null){
 			this.lastKnownLocation = new Location(0, 0, 0);
-			CTFChampion.logStatic.log(Level.INFO, 
+			log.log(Level.INFO, 
 					"Creating player with null location, zero location added instead [PlayerInfo()]"); 
 		}
 	}
@@ -95,7 +88,7 @@ public abstract class PlayerInfo extends LocationInfo {
 
 	public void connectPlayer(Player player) {
 		this.player = player;
-		CTFChampion.logStatic.log(Level.INFO, 
+		log.log(Level.INFO, 
 					"Player {0} connected. [connectPlayer()]", getName()); 
 	}
 	
@@ -109,6 +102,11 @@ public abstract class PlayerInfo extends LocationInfo {
 	
 	@Override
 	protected boolean lastKnownLocationTimeExpired() {
-		return informationBase.getInfo().getTime() - lastKnownLocationTime < PLAYER_LOCATION_EXPIRE_TIME;
+		log.log(Level.INFO, 
+					"Player {0} location expiration tested. Game time: {1}, location time {2} [lastKnownLocationTimeExpired()]", 
+					new String[]{getName(), 
+						Double.toString(informationBase.getInfo().getTime()), 
+						Double.toString(lastKnownLocationTime)}); 
+		return informationBase.getInfo().getTime() - lastKnownLocationTime > PLAYER_LOCATION_EXPIRE_TIME;
 	}
 }

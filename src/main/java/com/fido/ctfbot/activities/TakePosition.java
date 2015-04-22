@@ -16,6 +16,7 @@
  */
 package com.fido.ctfbot.activities;
 
+import com.fido.ctfbot.informations.HidingSpot;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
@@ -26,7 +27,9 @@ import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallM
 import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import cz.cuni.amis.utils.IFilter;
+import java.util.ArrayList;
 import java.util.logging.Level;
+import javax.swing.text.html.HTMLDocument;
 
 /**
  *
@@ -54,6 +57,10 @@ public class TakePosition extends HighLevelActivity {
 	private int maxNumberOfEdges = 2;
 	
 	private int rotationIteartor = 0;
+	
+	private boolean knownHidingSpotsAlreadyTried;
+	
+	private HidingSpot hidingSpot;
 	
 	
 	
@@ -86,16 +93,21 @@ public class TakePosition extends HighLevelActivity {
 	@Override
 	public void run() {
 		if(position == null){
-			// we are at the point near whitch we wat to hide - calculate spot position.
-			if(info.atLocation(nearTo)){
-				calculatePosition();
+			if(knownHidingSpotsAlreadyTried){
+				// we are at the point near whitch we wat to hide - calculate spot position.
+				if(info.atLocation(nearTo)){
+					calculatePosition();
+				}
+				// we are not at the point near whitch we wat to hide - going to the point.
+				else{
+					log.log(Level.INFO, "Going to the point of interest: {0} [TakePosition.run()]", nearTo);
+					runChildActivity(new Move(informationBase, log, this, nearTo));
+				}
 			}
-			// we are not at the point near whitch we wat to hide - going to the point.
 			else{
-				log.log(Level.INFO, "Going to the point of interest: {0} [TakePosition.run()]", nearTo);
-				runChildActivity(new Move(informationBase, log, this, nearTo));
+				knownHidingSpotsAlreadyTried = true;
+				tryKnownHiddingSpots();
 			}
-			
 		}
 		else {
 			// now we are in hiding spot - going to watch the area
@@ -114,7 +126,9 @@ public class TakePosition extends HighLevelActivity {
 
 	@Override
 	protected void close() {
-		
+		if(hidingSpot != null){
+			hidingSpot.setUsed(false);
+		}
 	}
 
 	@Override
@@ -159,10 +173,13 @@ public class TakePosition extends HighLevelActivity {
 						}
 					}.setNumberOfEdges(maxNumberOfEdges));
 					if(position != null){
-						return;
+						hidingSpot = informationBase.addNewHidingSpot(nearTo, position);
+						run();
 					}
-					move.turnHorizontal(45);
-					rotationIteartor++;
+					else{
+						move.turnHorizontal(45);
+						rotationIteartor++;
+					}
 				}
 			}
 			else{
@@ -188,6 +205,21 @@ public class TakePosition extends HighLevelActivity {
 //		move.turnHorizontal(120);
 //		move.turnHorizontal(-240);
 //		move.turnTo(nearTo);
+	}
+
+	private void tryKnownHiddingSpots() {
+		ArrayList<HidingSpot> hidingSpots = informationBase.getHidingSpots(nearTo);
+		if(hidingSpots != null){
+			for (HidingSpot hidingSpot : hidingSpots) {
+				if(!hidingSpot.isUsed()){
+					position = hidingSpot.getPosition();
+					this.hidingSpot = hidingSpot;
+					hidingSpot.setUsed(true);
+					run();
+					return;
+				}
+			}
+		}
 	}
 	
 }

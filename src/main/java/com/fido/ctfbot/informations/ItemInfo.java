@@ -35,29 +35,15 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 	private static final double DOUBLE_RESPAWN_TIME = 55;
 	private static final double TRIPLE_RESPAWN_TIME = 82;
     
-    private static Items items;
+    private final Items items;
     
-    
-	public static boolean isWorthTakeWhileNavigating(Item item) {
-		return items.isPickable(item) && items.isPickupSpawned(item);
-	}
-
-    public static void setInfo(Items items) {
-       ItemInfo.items = items;
-    }
-	
-	
-	
-	
 	private final FloydWarshallMap fwMap;
 	
 	private final AgentInfo info;
 	
 	private final IUT2004Navigation navigation;
 	
-	private final LogCategory log;
 	
-//	private final Items items;
 	
 	
 	private final Item item;
@@ -116,7 +102,6 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
 		this.fwMap = fwMap;
 		this.info = info;
 		this.navigation = navigation;
-		this.log = log;
 		items = informationBase.getItems();
         this.itemTypeInfo = informationBase.getItemTypesInfo().get((UT2004ItemType) item.getType());
 	}
@@ -157,6 +142,4 @@ public class ItemInfo extends Info implements Comparable<ItemInfo>{
     public boolean isItemSpawned(){
         return timeToRespawn == 0;
     }
-	
-	
 }

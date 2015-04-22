@@ -119,6 +119,8 @@ public final class InformationBase {
 	
 	private final ItemDistanceComparator itemDistanceComparator;
 	
+	private final HashMap<Location,ArrayList<HidingSpot>> hidingSpots;
+	
 	
 	/* other */
 	
@@ -219,6 +221,11 @@ public final class InformationBase {
 	public NavPoints getNavPoints() {
 		return navPoints;
 	}
+
+	public LogCategory getLog() {
+		return log;
+	}
+	
 	
 	
 	
@@ -244,8 +251,6 @@ public final class InformationBase {
 		this.items = items;
 		this.navPoints = navPoints;
 		this.game = game;
-		
-        ItemInfo.setInfo(items);
         
 		friends = new HashMap<UnrealId, FriendInfo>();
 		enemies = new HashMap<UnrealId, EnemyInfo>();
@@ -256,6 +261,7 @@ public final class InformationBase {
 		itemsInfo = new HashMap<UnrealId, ItemInfo>();
 		recentSpotedItems = new RecentSpotedItems(this);
 		itemDistanceComparator = new ItemDistanceComparator(this);
+		hidingSpots = new HashMap<Location, ArrayList<HidingSpot>>();
 	}
 
 	
@@ -321,8 +327,11 @@ public final class InformationBase {
 		double minDistance = getDistance(randomFriend.getBestLocation(), nearestTo);
 		UnrealId minDistanceFriendId = randomFriend.getId();
 		for(FriendInfo friend : friends.values()){
-			log.log(Level.INFO, "player {0} checked for distance: [getNearestFriendTo()]", friend.getName());
 			double distance = getDistance(friend.getBestLocation(), nearestTo);
+			log.log(Level.INFO, "player {0} at location {1} checked for distance. Distance = {2} [getNearestFriendTo()]", 
+					new String[]{friend.getName(), 
+						friend.getBestLocation() == null ? "null" : friend.getBestLocation().toString(), 
+						Double.toString(distance)});
 			if(distance < minDistance){
 				minDistance = distance;
 				minDistanceFriendId = friend.getId();
@@ -505,5 +514,27 @@ public final class InformationBase {
 	public int getNumberOfBotsInGame(){
 		return allPlayersInfo.size();
 	}
+
+	public HidingSpot addNewHidingSpot(Location nearTo, NavPoint position) {
+		HidingSpot hidingSpot = new HidingSpot(this, position);
+		if(hidingSpots.containsKey(nearTo)){
+			hidingSpots.get(nearTo).add(hidingSpot);
+		}
+		else{
+			ArrayList<HidingSpot> hidingSpotsNearTo = new ArrayList<HidingSpot>();
+			hidingSpotsNearTo.add(hidingSpot);
+			hidingSpots.put(nearTo, hidingSpotsNearTo);
+		}
+		return hidingSpot;
+	}
+
+	public ArrayList<HidingSpot> getHidingSpots(Location nearTo) {
+		return hidingSpots.get(nearTo);
+	}
+
+	public boolean isWorthTakeWhileNavigating(Item item) {
+		return items.isPickable(item) && items.isPickupSpawned(item);
+	}
+
 	
 }

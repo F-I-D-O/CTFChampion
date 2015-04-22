@@ -21,6 +21,7 @@ import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
 import com.fido.ctfbot.informations.ItemTypeInfo;
+import com.fido.ctfbot.modules.ActivityPlanner;
 import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
@@ -43,7 +44,7 @@ public class Harvest extends HighLevelActivity {
 	
 	public static final double HARVEST_NEAR_BASE_DISTANCE_LIMIT = 3000;
 	
-	public static final Cooldown tryToHarvestWhileGuardingCoolDown = new Cooldown(10000);
+	
 	
 	
 	
@@ -106,9 +107,10 @@ public class Harvest extends HighLevelActivity {
 			if(harvestingPriorities.isEmpty()){
 				log.log(Level.INFO, "Nothing to harvest [Harvest.run()]");
 				if(bot.getGoal() == Goal.GUARD_OUR_FLAG){
-					tryToHarvestWhileGuardingCoolDown.use();
+					((ActivityPlanner) caller).tryToHarvestWhileGuardingCoolDown.use();
+					caller.childActivityFinished();
 				}
-				if(informationBase.amIArmed()){
+				else if(informationBase.amIArmed()){
 					bot.request(RequestType.END_HARVEST);
 					caller.childActivityFinished();
 				}

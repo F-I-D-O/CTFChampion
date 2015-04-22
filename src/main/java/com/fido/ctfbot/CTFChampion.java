@@ -83,9 +83,6 @@ public class CTFChampion extends UT2004BotTCController {
 	private static final double LOCATION_MESSAGE_SEND_INTERVAL = 5;
 	
 	
-
-	
-	public static LogCategory logStatic;
 	
 	
 	
@@ -428,8 +425,6 @@ public class CTFChampion extends UT2004BotTCController {
 		log.info("botInitialized start"); 
 
 		
-		CTFChampion.logStatic = log;
-		
         informationBase.initItemTypeInfo();
 		informationBase.initItemsInfo();
 		
@@ -521,6 +516,8 @@ public class CTFChampion extends UT2004BotTCController {
 			firsLogic = false;
 		}
 		
+		sendLocationMessage(); 
+		
 		// checks that no action is taken until all bots are in game
 		if(allBotsInGame || checkAllBotsInGame()){
             
@@ -539,8 +536,6 @@ public class CTFChampion extends UT2004BotTCController {
             log.log(Level.INFO, "There are not enough players in game. Number of bots in game: {0}.", 
                     informationBase.getNumberOfBotsInGame());
         }
-
-		sendLocationMessage(); 
     }
 
 //	private void dealWithEnemis() {
@@ -663,10 +658,9 @@ public class CTFChampion extends UT2004BotTCController {
 
 	private boolean checkAllBotsInGame() {
 		informationBase.processMissingPlayers();
-		
 		// there we expecttwo teams and human player as observer.
 		if(informationBase.getFriends().size() + informationBase.getEnemies().size() >= 
-				InformationBase.TEAM_SIZE * 2 + 1){
+				InformationBase.TEAM_SIZE  + 1){
 			allBotsInGame = true;
 			return true;
 		}

@@ -16,7 +16,6 @@
  */
 package com.fido.ctfbot.informations.players;
 
-import com.fido.ctfbot.informations.players.PlayerInfo;
 import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.StrategyPlanner;

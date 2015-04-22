@@ -119,11 +119,13 @@ public class StrategyPlanner extends CTFChampionModule{
 		HashMap<UnrealId,FriendInfo> friendsTmp = getCopyFriendInfo();
 		
 		// firs assign one bot to guard our flag
-		FriendInfo  nearestFriendToOurBae = informationBase.getFriends().get(
+		FriendInfo  nearestFriendToOurBase = informationBase.getFriends().get(
 				informationBase.getNearestFriendTo(ctf.getOurBase().getLocation()));
-		boolean commandIssued = issueCommand(nearestFriendToOurBae, Goal.GUARD_OUR_FLAG);
+		log.log(Level.INFO, "Player at location: {0} has been chosen as nearest to our base [steelEnemyFlag()]", 
+				nearestFriendToOurBase.getBestLocation());
+		boolean commandIssued = issueCommand(nearestFriendToOurBase, Goal.GUARD_OUR_FLAG);
 		if(commandIssued){
-			friendsTmp.remove(nearestFriendToOurBae.getId());
+			friendsTmp.remove(nearestFriendToOurBase.getId());
 			
 			// then other to attack
 			FriendInfo  nearestFriendToEnemyBase = informationBase.getFriends().get(
