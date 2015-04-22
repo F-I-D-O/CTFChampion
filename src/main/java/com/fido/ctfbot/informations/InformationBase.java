@@ -128,8 +128,6 @@ public final class InformationBase {
 	
 	private int numberOfNotConnectedPlayers = 0;
 	
-	private double timeOfLastNothingToHarvest = 0;
-	
 	
 	
 		
@@ -216,14 +214,6 @@ public final class InformationBase {
 
 	public Game getGame() {
 		return game;
-	}
-
-	public double getTimeOfLastNothingToHarvest() {
-		return timeOfLastNothingToHarvest;
-	}
-
-	public void setTimeOfLastNothingToHarvest(double timeOfLastNothingToHarvest) {
-		this.timeOfLastNothingToHarvest = timeOfLastNothingToHarvest;
 	}
 
 	public NavPoints getNavPoints() {
@@ -458,7 +448,8 @@ public final class InformationBase {
 	}
 	
 	public boolean isInOurBase(Location location){
-		return bot.getNavigationUtils().getDistance(location, ctf.getOurBase().getLocation()) < BASE_SIZE;
+		return location != null &&
+				bot.getNavigationUtils().getDistance(location, ctf.getOurBase().getLocation()) < BASE_SIZE;
 	}
 	
 	public boolean isReachable(NavPoint navPoint) {

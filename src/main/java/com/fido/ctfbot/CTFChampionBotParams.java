@@ -14,23 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.informations.flags;
+package com.fido.ctfbot;
 
-import com.fido.ctfbot.informations.InformationBase;
-import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.ut2004.bot.params.UT2004BotParameters;
 
 /**
  *
- * @author david_000
+ * @author Fido
  */
-public class EnemyFlagInfo extends FlagInfo{
-	
-	private static final double ENEMY_FLAG_LOCATION_EXPIRE_TIME = 5;
+public class CTFChampionBotParams extends UT2004BotParameters{
 
-	public EnemyFlagInfo(InformationBase informationBase, cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
-		super(informationBase, flag, lastKnownPosition, lastKnownPositionTime);
+    private String botSkin;
+	
+	private int skillLevel = 4;
+	
+	
+	
+	public String getBotSkin() {
+		return botSkin;
 	}
-    
-    
-    
+	
+	public CTFChampionBotParams setBotSkin(String botSkin) {
+		this.botSkin = botSkin;
+		return this;
+	}
+
+	public int getSkillLevel() {
+		return skillLevel;
+	}
+	
+	public CTFChampionBotParams setSkillLevel(int skillLevel) {
+		this.skillLevel = skillLevel;
+		return this;
+	}
+	
 }

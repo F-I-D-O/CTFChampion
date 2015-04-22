@@ -1,3 +1,5 @@
+package com.fido.ctfbot;
+
 /*
  * Copyright (C) 2015 AMIS research group, Faculty of Mathematics and Physics, Charles University in Prague, Czech Republic
  *
@@ -14,23 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.informations.flags;
-
-import com.fido.ctfbot.informations.InformationBase;
-import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 
 /**
  *
- * @author david_000
+ * @author Fido
  */
-public class EnemyFlagInfo extends FlagInfo{
-	
-	private static final double ENEMY_FLAG_LOCATION_EXPIRE_TIME = 5;
-
-	public EnemyFlagInfo(InformationBase informationBase, cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
-		super(informationBase, flag, lastKnownPosition, lastKnownPositionTime);
-	}
-    
-    
-    
+public enum Direction {
+	STRAIGHT,
+	BACK,
+	RIGHT,
+	LEFT
 }

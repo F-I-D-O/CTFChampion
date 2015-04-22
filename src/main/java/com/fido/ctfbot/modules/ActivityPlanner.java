@@ -17,7 +17,7 @@
 package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.activities.Activity;
-import com.fido.ctfbot.activities.FightEnemy;
+import com.fido.ctfbot.activities.Fight;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.activities.Harvest;
 import com.fido.ctfbot.activities.ICaller;
@@ -43,12 +43,8 @@ import java.util.logging.Level;
  * @author Fido
  */
 public class ActivityPlanner extends CTFChampionModule implements ICaller{
+
 	
-	private static final double OUR_FLAG_LOCATION_EXPIRE_TIME = 5;
-	
-	private static final double ENEMY_FLAG_LOCATION_EXPIRE_TIME = 5;
-	
-	private static final double OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION = 1000;
 	
 
 	
@@ -73,6 +69,8 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	private EnemyFlagInfo enemyFlagInfo;
 	
 	private int numberOfActivitiesEndedThisTurn = 0;
+	
+	
 	
 	
 	
@@ -186,7 +184,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				// I see an enemy in our base!
 //				if(players.canSeeEnemies()){
 //					log.log(Level.INFO, "Enemy in our base - going to kill him [guardBase()]");
-//					runActivity(new FightEnemy(informationBase, log, this));
+//					runActivity(new Fight(informationBase, log, this));
 //				}
 //				else{
 					EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
@@ -194,8 +192,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 					// if no enemy in our base
 					if(enemyInfo == null){
 						// there are things to harvest - going harvest
-						if(informationBase.getTimeOfLastNothingToHarvest() - info.getTime() > 
-								Harvest.TIME_BETWEEN_TWO_HARVEST_ATTEMPTS){
+						if(currentActivity instanceof Harvest || Harvest.tryToHarvestWhileGuardingCoolDown.isCool()){
 							log.log(Level.INFO, "Base clean - going to pick up some items [guardBase()]");
 							runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
 									InformationBase.BASE_SIZE));
@@ -209,7 +206,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 					}
 					else{
 						log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [guardBase()]");
-						runActivity(new FightEnemy(informationBase, log, this, enemyInfo.getPlayer()));
+						runActivity(new Fight(informationBase, log, this, enemyInfo.getPlayer()));
 					}
 //				}
 			}
@@ -267,8 +264,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				// fight the thief
 				else{
 					log.log(Level.INFO, "our flag is hold by enemy - killing him [getBackOurFlag()]");
-					runActivity(
-							new FightEnemy(informationBase, log, this, players.getPlayer(ctf.getOurFlag().getHolder())));
+					runActivity(new Fight(informationBase, log, this, players.getPlayer(ctf.getOurFlag().getHolder())));
 				}
 			}
 		}
@@ -281,10 +277,10 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
         else{
             
 			// bot knows where the flag was recently, go to that place
-			if(ourFlagInfo.getLastKnownLocationTime() < OUR_FLAG_LOCATION_EXPIRE_TIME && 
+			if(!ourFlagInfo.lastKnownLocationTimeExpired() && 
 					informationBase.getDistance(ourFlagInfo.getLastKnownLocation(), info.getLocation()) < 
-						OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION){
-				log.log(Level.INFO, "we kdoe recent location of the flag - going to that location [getBackOurFlag()]");
+						OurFlagInfo.OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION){
+				log.log(Level.INFO, "we know recent location of the flag - going to that location [getBackOurFlag()]");
 				runActivity(new Move(informationBase, log, this, ourFlagInfo.getLastKnownLocation()));
 			}
 			// go to enemy base and wait for him!
@@ -325,18 +321,18 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 			// I see an enemy!
 //			if(players.canSeeEnemies()){
 //				log.log(Level.INFO, "Enemy - going to kill him [harvestNearOurBase()]");
-//				runActivity(new FightEnemy(informationBase, log, this));
+//				runActivity(new Fight(informationBase, log, this));
 //			}
 //			else{
 				EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
 				if(enemyInfo == null){
 					log.log(Level.INFO, "Base clean - going to pick up some items [harvestNearOurBase()]");
 					runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
-							Harvest.HARVEST_NEAR_BASE_DISTANCE_LIMIT));
+							Harvest.HARVEST_NEAR_BASE_DISTANCE_LIMIT, informationBase.BASE_SIZE));
 				}
 				else{
 					log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [harvestNearOurBase()]");
-					runActivity(new FightEnemy(informationBase, log, this, enemyInfo.getPlayer()));
+					runActivity(new Fight(informationBase, log, this, enemyInfo.getPlayer()));
 				}
 //			}
 		}

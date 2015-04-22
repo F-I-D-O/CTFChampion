@@ -17,19 +17,20 @@
 package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.Direction;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
-import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Velocity;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
-import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.pathfollowing.NavMeshNavigation;
+import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
-import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -38,6 +39,11 @@ import java.util.logging.Level;
  */
 public class NavigationUtils extends CTFChampionModule {
 	
+	private static final int JUMP_DISTANCE = 200;
+	
+	
+	
+	
 	private final FloydWarshallMap fwMap;
 	
 	private final NavPoints navPoints;
@@ -45,6 +51,10 @@ public class NavigationUtils extends CTFChampionModule {
 	private final UT2004Navigation navigation;
 			
 	private final NavMeshNavigation nmNav;
+	
+	private final AgentInfo info;
+	
+	private final AdvancedLocomotion move;
 	
 	
 	
@@ -58,6 +68,8 @@ public class NavigationUtils extends CTFChampionModule {
 		this.navPoints = navPoints;
 		this.navigation = navigation;
 		this.nmNav = nmNav;
+		info = bot.getInfo();
+		move = bot.getMove();
 	}
 	
 	public double getDistance(Location location1, Location location2){
@@ -96,6 +108,40 @@ public class NavigationUtils extends CTFChampionModule {
 		}
 		log.log(Level.INFO, "Navpoint at {0} is free [isNavPointOccupied()]", navpoint.getLocation());
 		return false;
+	}
+
+	public Location getDodgeFallLocation(Direction direction) {
+		double x = 0, y = 0;
+		switch(direction){
+			case BACK:
+				x = -(navigation.getFocus().getLocation().x - info.getLocation().x);
+				y = -(navigation.getFocus().getLocation().y - info.getLocation().y);
+				break;
+			case RIGHT:
+				x = -(navigation.getFocus().getLocation().y - info.getLocation().y);
+				y = (navigation.getFocus().getLocation().x - info.getLocation().x);
+				break;
+			case LEFT:
+				x = (navigation.getFocus().getLocation().y - info.getLocation().y);
+				y = -(navigation.getFocus().getLocation().x - info.getLocation().x);
+				break;
+		}
+		
+		return info.getLocation().add(new Velocity(x, y, 0).normalize().scale(JUMP_DISTANCE));
+	}
+
+	public void dodgeInDirection(Direction direction) {
+		switch(direction){
+			case BACK:
+				move.dodgeBack(info, false);
+				return;
+			case RIGHT:
+				move.dodgeRight(info, false);
+				return;
+			case LEFT:
+				move.dodgeLeft(info, false);
+				return;
+		}
 	}
 	
 }

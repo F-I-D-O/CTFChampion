@@ -16,21 +16,29 @@
  */
 package com.fido.ctfbot.activities;
 
+import com.fido.ctfbot.Direction;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.players.EnemyInfo;
+import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.base3d.worldview.object.Velocity;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
+import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
 import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import cz.cuni.amis.utils.Cooldown;
+import java.util.ArrayList;
 import java.util.logging.Level;
 
 /**
  *
  * @author Fido
  */
-public class FightEnemy extends Activity {
+public class Fight extends Activity {
 
 	private final Players players;
 	
@@ -39,11 +47,21 @@ public class FightEnemy extends Activity {
 	private final ImprovedShooting shoot;
 	
 	private final WeaponPrefs weaponPrefs;
+	
+	private final AgentInfo info;
+	
+	private final AdvancedLocomotion move;
     
     
+	private final NavigationUtils navigationUtils;
+	
     private final Player chosenEmemy;
 	
 	private final EnemyInfo chosenEmemyInfo;
+	
+	private final Cooldown expertMoveCooldown = new Cooldown(500);
+	
+	private ArrayList<Integer> expertMoveTriedTypes;
 
 	
 	public Player getChosenEmemy() {
@@ -60,17 +78,11 @@ public class FightEnemy extends Activity {
      * @param log 
 	 * @param caller 
      */
-	public FightEnemy(InformationBase informationBase, LogCategory log, ICaller caller) {
-		super(informationBase, log, caller);
-		players = informationBase.getPlayers();
-		navigation = bot.getMainNavigation();
-		shoot = informationBase.getShoot();
-		weaponPrefs = informationBase.getWeaponPrefs();
-        chosenEmemy = players.getNearestVisibleEnemy();
-		chosenEmemyInfo  = informationBase.getEnemies().get(chosenEmemy.getId());
+	public Fight(InformationBase informationBase, LogCategory log, ICaller caller) {
+		this(informationBase, log, caller, informationBase.getPlayers().getNearestVisibleEnemy());
 	}
     
-    public FightEnemy(InformationBase informationBase, LogCategory log, ICaller caller,
+    public Fight(InformationBase informationBase, LogCategory log, ICaller caller,
 			Player enemy) {
 		super(informationBase, log, caller);
 		players = informationBase.getPlayers();
@@ -79,6 +91,9 @@ public class FightEnemy extends Activity {
 		weaponPrefs = informationBase.getWeaponPrefs();
         chosenEmemy = enemy;
 		chosenEmemyInfo  = informationBase.getEnemies().get(chosenEmemy.getId());
+		info = bot.getInfo();
+		navigationUtils = bot.getNavigationUtils();
+		move = bot.getMove();
 	}
 
 	@Override
@@ -89,13 +104,23 @@ public class FightEnemy extends Activity {
 				navigation.setFocus(chosenEmemy);
 				navigation.navigate(chosenEmemy);
 				shoot.shoot(weaponPrefs, chosenEmemy);
+				log.log(Level.INFO, "Chosen enemy is visible, shooting with: {0} [FightEnemy.run()]", shoot.getLastShooting());
+				doExpertMove(chosenEmemy);
 			}
 			else{
-				navigation.navigate(chosenEmemyInfo.getLastKnownLocation());
+				log.log(Level.INFO, "Chosen enemy is not visible. [FightEnemy.run()]");
+				shoot.stopShooting();
+				Location bestKnownLocation = chosenEmemyInfo.getBestLocation();
+				if(bestKnownLocation != null){
+					navigation.navigate(bestKnownLocation);
+				}
+				else{
+					caller.childActivityFinished();
+				}
 			}
         }
         else{
-            log.log(Level.WARNING, "Chosen enemy null [FightEnemy.start()]");
+            log.log(Level.WARNING, "Chosen enemy null [FightEnemy.run()]");
         }
 	}
 
@@ -107,9 +132,46 @@ public class FightEnemy extends Activity {
 
 	@Override
 	protected boolean activityParametrsEquals(Object activity) {
-		return this.chosenEmemy.getId().equals(((FightEnemy) activity).chosenEmemy.getId()); 
+		return this.chosenEmemy.getId().equals(((Fight) activity).chosenEmemy.getId()); 
 	}
 	
-	
+	private void doExpertMove(Player player) {
+		if(expertMoveCooldown.isCool()){
+			expertMoveCooldown.use();
+			expertMoveTriedTypes = new ArrayList<Integer>();
+			int type = 0;
+			for (int i = 0; i < 3; i++) {
+				while(true){
+					type = (int) Math.round(Math.random() * 2);
+					if(!expertMoveTriedTypes.contains(type)){
+						expertMoveTriedTypes.add(type);
+						break;
+					}
+				}
+				
+				Direction direction = null;
+				switch(type){
+					case 0:
+						direction = Direction.BACK;
+						break;
+					case 1:
+						direction = Direction.RIGHT;
+						break;
+					case 2:
+						direction = Direction.LEFT;
+						break;
+				}
+				if(direction != null){
+					Location jumpLocation = navigationUtils.getDodgeFallLocation(Direction.BACK);
+//					debugTools.drawIntention(jumpLocation);
+					if(bot.getNavMeshModule().getNavMesh().getPolygonId(jumpLocation) > 0){
+						navigationUtils.dodgeInDirection(direction);
+						return;
+					}
+				}
+			}
+			move.jump();
+		}
+	}
 	
 }

@@ -408,7 +408,7 @@ public class CTFChampion extends UT2004BotTCController {
      */
     @Override
     public Initialize getInitializeCommand() {   
-		return new Initialize();
+		return new Initialize().setDesiredSkill(getParams().getSkillLevel()).setTeam(getParams().getTeam());
 //    	return new Initialize().setName("DeathMatch Champion");
     	// By commenting out the line above and uncommenting line below, you will change the skin of your bot.
     	//return new Initialize().setName("SkinBot").setSkin("Dominator");        
@@ -665,8 +665,8 @@ public class CTFChampion extends UT2004BotTCController {
 		informationBase.processMissingPlayers();
 		
 		// there we expecttwo teams and human player as observer.
-		if(informationBase.getFriends().size() + informationBase.getEnemies().size() == 
-				InformationBase.TEAM_SIZE  + 1){
+		if(informationBase.getFriends().size() + informationBase.getEnemies().size() >= 
+				InformationBase.TEAM_SIZE * 2 + 1){
 			allBotsInGame = true;
 			return true;
 		}
@@ -691,5 +691,7 @@ public class CTFChampion extends UT2004BotTCController {
 //		navBuilder.removeEdgesBetween("CTF-Citadel.PathNode99", "CTF-Citadel.JumpSpot27");
 	}
 	
-	
+	public CTFChampionBotParams getParams() {
+        return (CTFChampionBotParams) bot.getParams();
+    }
 }

@@ -54,9 +54,9 @@ public class AgentRunner {
 //                new UT2004BotParameters().setTeam(0),
 //				new UT2004BotParameters().setTeam(0)
                 
-                new UT2004BotParameters().setTeam(1),
-                new UT2004BotParameters().setTeam(1),
-				new UT2004BotParameters().setTeam(1)
+                new CTFChampionBotParams().setTeam(1),
+                new CTFChampionBotParams().setTeam(1),
+				new CTFChampionBotParams().setTeam(1)
 		);
     }
 }

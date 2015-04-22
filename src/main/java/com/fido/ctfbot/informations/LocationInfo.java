@@ -62,7 +62,7 @@ public abstract class LocationInfo extends Info {
 	public Location getBestLocation(){
 		Location actualLocation = getActualLocation();
 		if(actualLocation == null){
-			if(lastKnownLocationTimeExpired()){
+			if(lastKnownLocationTimeExpired() || informationBase.getInfo().atLocation(lastKnownLocation)){
 				return null;
 			}
 			else{

@@ -16,6 +16,7 @@
  */
 package com.fido.ctfbot.activities;
 
+import com.fido.ctfbot.Goal;
 import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.ItemInfo;
@@ -28,6 +29,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
+import cz.cuni.amis.utils.Cooldown;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -41,8 +43,7 @@ public class Harvest extends HighLevelActivity {
 	
 	public static final double HARVEST_NEAR_BASE_DISTANCE_LIMIT = 3000;
 	
-	public static final double TIME_BETWEEN_TWO_HARVEST_ATTEMPTS = 20;
-	
+	public static final Cooldown tryToHarvestWhileGuardingCoolDown = new Cooldown(10000);
 	
 	
 	
@@ -58,9 +59,11 @@ public class Harvest extends HighLevelActivity {
 			
 	
 	
-	private Location searchingAreaCenter;
+	private final Location searchingAreaCenter;
 	
-	private double maxDistance;
+	private final double maxDistance;
+	
+	private final double minDistance;
 	
 	private ArrayList<ItemInfo> harvestingPriorities;
 	
@@ -71,17 +74,16 @@ public class Harvest extends HighLevelActivity {
 
 	
 	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller) {
-		super(informationBase, log, caller);
-		navigation = informationBase.getNavigation();
-		weaponry = informationBase.getWeaponry();
-		game = informationBase.getGame();
-		items = informationBase.getItems();
-		
-		navigationUtils = bot.getNavigationUtils();
+		this(informationBase, log, caller, null, 0, 0);
 	}
 	
 	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller, Location searchingAreaCenter, 
 			double maxDistance) {
+		this(informationBase, log, caller, searchingAreaCenter, maxDistance, 0);
+	}
+	
+	public Harvest(InformationBase informationBase, LogCategory log, ICaller caller, Location searchingAreaCenter, 
+			double maxDistance, double minDistance) {
 		super(informationBase, log, caller);
 		navigation = informationBase.getNavigation();
 		weaponry = informationBase.getWeaponry();
@@ -91,6 +93,7 @@ public class Harvest extends HighLevelActivity {
 		navigationUtils = bot.getNavigationUtils();
 		this.searchingAreaCenter = searchingAreaCenter;
 		this.maxDistance = maxDistance;
+		this.minDistance = minDistance;
 	}
 
 	
@@ -102,7 +105,9 @@ public class Harvest extends HighLevelActivity {
 			callculateHarvestingPriority();
 			if(harvestingPriorities.isEmpty()){
 				log.log(Level.INFO, "Nothing to harvest [Harvest.run()]");
-				informationBase.setTimeOfLastNothingToHarvest(informationBase.getInfo().getTime());
+				if(bot.getGoal() == Goal.GUARD_OUR_FLAG){
+					tryToHarvestWhileGuardingCoolDown.use();
+				}
 				if(informationBase.amIArmed()){
 					bot.request(RequestType.END_HARVEST);
 					caller.childActivityFinished();
@@ -155,15 +160,18 @@ public class Harvest extends HighLevelActivity {
 			
 			NavPoint itemNavPoint = itemInfo.getItem().getNavPoint();
 		  
-			// ze seznamu priorit zcela vyřadíme věci které nemůžemne sebrat, 
+			// we remove from the list items, that is not pickable, 
 			if(!items.isPickable(itemInfo.getItem()) || 
-					// které jsou nedosažitelné
+					// or is not reachable
 					!informationBase.isReachable(itemNavPoint) ||					
-					// nebo které ještě nejsou respawnované               
+					// or is not spwawned yet              
 					!itemInfo.isItemSpawned() ||
-					// or item is too far
+					// or is too far
 					searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance ||
+					// or is too close 
+					minDistance != 0 && bot.getNavigationUtils().getDistance(
+							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance ||
 					// point not used test
 					navigationUtils.isNavPointOccupied(itemNavPoint)
 					){
@@ -192,6 +200,11 @@ public class Harvest extends HighLevelActivity {
 		else if(searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance){
 			log.log(Level.INFO, "Item removed because it's too far: {0} [Harvest.debugRemovalCause()]", itemInfo);
+		}
+		else if(// or item is too close 
+					minDistance != 0 && bot.getNavigationUtils().getDistance(
+							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance){
+			log.log(Level.INFO, "Item removed because it's too close: {0} [Harvest.debugRemovalCause()]", itemInfo);
 		}
 		else{
 			log.log(Level.INFO, "Item removed for unknown reason: {0} [Harvest.debugRemovalCause()]", itemInfo);

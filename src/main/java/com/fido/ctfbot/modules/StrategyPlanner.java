@@ -199,9 +199,10 @@ public class StrategyPlanner extends CTFChampionModule{
 	}
 
 	private boolean processRequest(RequestMessage playerRequest) {
+		log.log(Level.WARNING, "Procesing request: {0} [processRequest()]", playerRequest.getRequestType());
 		switch(playerRequest.getRequestType()){
 			case END_HARVEST:
-				return processHarvestRequest(playerRequest);
+				return processEndHarvestRequest(playerRequest);
 			default:
 				log.log(Level.WARNING, "Illegal request: {0} [processRequest()]", playerRequest.getRequestType());
 				return false;
@@ -209,12 +210,14 @@ public class StrategyPlanner extends CTFChampionModule{
 	}
 	
 	public boolean processRequest(RequestType playerRequest) {
-		return processHarvestRequest(new RequestMessage(playerRequest, informationBase.getInfo().getId()));
+		return processEndHarvestRequest(new RequestMessage(playerRequest, informationBase.getInfo().getId()));
 	}
 
-	private boolean processHarvestRequest(RequestMessage playerRequest) {
+	private boolean processEndHarvestRequest(RequestMessage playerRequest) {
+		log.log(Level.WARNING, "Procesing end harvest request: {0} [processRequest()]", playerRequest.getRequestType());
 		boolean commandIssued;
 		if(exchangeGuardingRolesCooldown.isCool()){
+			log.log(Level.WARNING, "End harvest request - roles will be exchanged [processEndHarvestRequest()]");
 			exchangeGuardingRolesCooldown.use();
 			commandIssued = issueCommand(informationBase.getFrindByGoal(Goal.GUARD_OUR_FLAG), Goal.HARVEST_NEAR_OUR_BASE);
 			
@@ -224,6 +227,7 @@ public class StrategyPlanner extends CTFChampionModule{
 			}
 		}
 		else{
+			log.log(Level.WARNING, "End harvest request - cannot exchange roles - there will be two guards [processEndHarvestRequest()]");
 			commandIssued = issueCommand(informationBase.getFriends().get(playerRequest.getPlayerId()), 
 					Goal.GUARD_OUR_FLAG);
 		}

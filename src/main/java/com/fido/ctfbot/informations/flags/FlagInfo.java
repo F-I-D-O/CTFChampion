@@ -58,7 +58,7 @@ public abstract class FlagInfo extends LocationInfo{
 	}
 
 	@Override
-	protected boolean lastKnownLocationTimeExpired() {
+	public boolean lastKnownLocationTimeExpired() {
 		return informationBase.getInfo().getTime() - lastKnownLocationTime < FLAG_LOCATION_EXPIRE_TIME; 
 	}
 	

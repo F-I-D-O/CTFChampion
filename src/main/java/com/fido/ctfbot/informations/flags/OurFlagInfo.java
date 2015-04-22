@@ -24,6 +24,10 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
  * @author david_000
  */
 public class OurFlagInfo extends FlagInfo {
+	
+	private static final double OUR_FLAG_LOCATION_EXPIRE_TIME = 8;
+	
+	public static final double OUR_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION = 2000;
 
 	public OurFlagInfo(InformationBase informationBase, cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
 		super(informationBase, flag, lastKnownPosition, lastKnownPositionTime);
