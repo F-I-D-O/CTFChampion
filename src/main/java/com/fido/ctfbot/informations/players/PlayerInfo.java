@@ -16,7 +16,6 @@
  */
 package com.fido.ctfbot.informations.players;
 
-import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.LocationInfo;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
@@ -102,11 +101,11 @@ public abstract class PlayerInfo extends LocationInfo {
 	
 	@Override
 	protected boolean lastKnownLocationTimeExpired() {
-		log.log(Level.INFO, 
-					"Player {0} location expiration tested. Game time: {1}, location time {2} [lastKnownLocationTimeExpired()]", 
-					new String[]{getName(), 
-						Double.toString(informationBase.getInfo().getTime()), 
-						Double.toString(lastKnownLocationTime)}); 
+//		log.log(Level.INFO, 
+//					"Player {0} location expiration tested. Game time: {1}, location time {2} [lastKnownLocationTimeExpired()]", 
+//					new String[]{getName(), 
+//						Double.toString(informationBase.getInfo().getTime()), 
+//						Double.toString(lastKnownLocationTime)}); 
 		return informationBase.getInfo().getTime() - lastKnownLocationTime > PLAYER_LOCATION_EXPIRE_TIME;
 	}
 }

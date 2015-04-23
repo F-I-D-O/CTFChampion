@@ -54,7 +54,8 @@ public abstract class Activity {
 	
 	
 	public final void start(){
-		 log.log(Level.INFO, "Activity {0} started. [start()]", this.getClass().getSimpleName());
+		init();
+		log.log(Level.INFO, "Activity {0} started. [start()]", this.getClass().getSimpleName());
 	}
 	
 	public final void end(){
@@ -87,6 +88,8 @@ public abstract class Activity {
 	protected abstract void close();
 
 	protected abstract boolean activityParametrsEquals(Object obj);
+
+	protected abstract void init();
 
 	
 }

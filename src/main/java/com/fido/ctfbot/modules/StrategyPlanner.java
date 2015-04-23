@@ -55,6 +55,8 @@ public class StrategyPlanner extends CTFChampionModule{
 	
 	private final Cooldown exchangeGuardingRolesCooldown = new Cooldown(10000);
 	
+	private final Cooldown strategyApplyCoodown = new Cooldown(2000);
+	
 
 	
 	public StrategyPlanner(CTFChampion bot, LogCategory log, ComunicationModule comunicationModule,
@@ -77,6 +79,7 @@ public class StrategyPlanner extends CTFChampionModule{
 		
 		if(nextStrategy != currentStrategy){
 			strategyApplied = false;
+//			strategyApplyCoodown.use();
 		}
 		
 		// saving current strategy
@@ -85,7 +88,7 @@ public class StrategyPlanner extends CTFChampionModule{
 		if(!strategyApplied){
 			strategyApplied = applyStrategy(nextStrategy);
 			if(!strategyApplied){
-				log.log(Level.INFO, "Applying new strategy wasn not succesful: {0} [applyStrategy()]", nextStrategy);
+				log.log(Level.INFO, "Applying new strategy was not succesful: {0} [applyStrategy()]", nextStrategy);
 			}
 		}
 		else{
@@ -151,6 +154,11 @@ public class StrategyPlanner extends CTFChampionModule{
 	}
 
 	private boolean issueCommand(FriendInfo friend, Goal goal) {
+		
+		if(friend == null){
+			log.log(Level.SEVERE, "Cannot issue command to null friend! [issueCommand()]");
+			return false;
+		}
 
 		// we issue the command only if player goal has changed
 		if(friend.getGoal() != goal){

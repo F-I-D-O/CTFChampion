@@ -21,15 +21,17 @@ import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavPoints;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.floydwarshall.FloydWarshallMap;
 import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
+import cz.cuni.amis.pogamut.ut2004.bot.command.ImprovedShooting;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import cz.cuni.amis.utils.IFilter;
 import java.util.ArrayList;
 import java.util.logging.Level;
-import javax.swing.text.html.HTMLDocument;
 
 /**
  *
@@ -44,6 +46,10 @@ public class TakePosition extends HighLevelActivity {
 	private final AgentInfo info;
 	
 	private final AdvancedLocomotion move;
+	
+	private final Weaponry weaponry;
+	
+	private final ImprovedShooting shoot;
 	
 	
 	private final NavigationUtils navigationUtils;
@@ -67,14 +73,7 @@ public class TakePosition extends HighLevelActivity {
 	
 
 	public TakePosition(InformationBase informationBase, LogCategory log, ICaller caller, Location nearTo) {
-		super(informationBase, log, caller);
-		fwMap = informationBase.getFwMap();
-		navPoints = informationBase.getNavPoints();
-		info = informationBase.getInfo();
-		move = bot.getMove();
-		
-		navigationUtils = bot.getNavigationUtils();
-		this.nearTo = nearTo;
+		this(informationBase, log, caller, nearTo, 0);
 	}
 	
 	public TakePosition(InformationBase informationBase, LogCategory log, ICaller caller, Location nearTo, 
@@ -84,10 +83,13 @@ public class TakePosition extends HighLevelActivity {
 		navPoints = informationBase.getNavPoints();
 		info = informationBase.getInfo();
 		move = bot.getMove();
+		weaponry = bot.getWeaponry();
+		shoot = bot.getShoot();
 		
 		navigationUtils = bot.getNavigationUtils();
 		this.nearTo = nearTo;
 		this.maxDistance = maxDistance;
+		
 	}
 
 	@Override
@@ -202,6 +204,11 @@ public class TakePosition extends HighLevelActivity {
 
 	private void watchArea() {
 		move.turnTo(nearTo);
+		if(weaponry.hasLoadedWeapon(UT2004ItemType.BIO_RIFLE) && !bot.isBioRifleCharged()){
+			shoot.changeWeapon(UT2004ItemType.BIO_RIFLE);
+			shoot.shootSecondary(navPoints.getNearestVisibleNavPoint());
+			bot.setBioRifleCharged(true);
+		}
 //		move.turnHorizontal(120);
 //		move.turnHorizontal(-240);
 //		move.turnTo(nearTo);
@@ -220,6 +227,11 @@ public class TakePosition extends HighLevelActivity {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void init() {
+		
 	}
 	
 }

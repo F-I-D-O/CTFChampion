@@ -22,7 +22,6 @@ import com.fido.ctfbot.informations.players.EnemyInfo;
 import com.fido.ctfbot.modules.NavigationUtils;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
-import cz.cuni.amis.pogamut.base3d.worldview.object.Velocity;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.WeaponPrefs;
@@ -79,18 +78,19 @@ public class Fight extends Activity {
 	 * @param caller 
      */
 	public Fight(InformationBase informationBase, LogCategory log, ICaller caller) {
-		this(informationBase, log, caller, informationBase.getPlayers().getNearestVisibleEnemy());
+		this(informationBase, log, caller, 
+				informationBase.getEnemies().get(informationBase.getPlayers().getNearestVisibleEnemy().getId()));
 	}
     
     public Fight(InformationBase informationBase, LogCategory log, ICaller caller,
-			Player enemy) {
+			EnemyInfo enemyInfo) {
 		super(informationBase, log, caller);
 		players = informationBase.getPlayers();
 		navigation = informationBase.getNavigation();
 		shoot = informationBase.getShoot();
 		weaponPrefs = informationBase.getWeaponPrefs();
-        chosenEmemy = enemy;
-		chosenEmemyInfo  = informationBase.getEnemies().get(chosenEmemy.getId());
+        chosenEmemy = enemyInfo.getPlayer();
+		chosenEmemyInfo  = enemyInfo;
 		info = bot.getInfo();
 		navigationUtils = bot.getNavigationUtils();
 		move = bot.getMove();
@@ -99,17 +99,27 @@ public class Fight extends Activity {
 	@Override
 	public void run() {
 		
-        if(chosenEmemy != null){
-			if(chosenEmemy.isVisible()){
+        if(chosenEmemyInfo != null){
+			if(chosenEmemy != null && chosenEmemy.isVisible()){
 				navigation.setFocus(chosenEmemy);
 				navigation.navigate(chosenEmemy);
-				shoot.shoot(weaponPrefs, chosenEmemy);
-				log.log(Level.INFO, "Chosen enemy is visible, shooting with: {0} [FightEnemy.run()]", shoot.getLastShooting());
-				doExpertMove(chosenEmemy);
+				if(bot.isBioRifleCharged()){
+					if(navigationUtils.getDistance(info.getLocation(), chosenEmemy.getLocation()) < 1000){
+						shoot.stopShooting();
+						bot.setBioRifleCharged(false);
+					}
+				}
+				else{
+					shoot.shoot(weaponPrefs, chosenEmemy);
+					log.log(Level.INFO, "Chosen enemy is visible, shooting with: {0} [FightEnemy.run()]", shoot.getLastShooting());
+//					doExpertMove(chosenEmemy);
+				}
 			}
 			else{
 				log.log(Level.INFO, "Chosen enemy is not visible. [FightEnemy.run()]");
-				shoot.stopShooting();
+				if(!bot.isBioRifleCharged()){
+					shoot.stopShooting();
+				}
 				Location bestKnownLocation = chosenEmemyInfo.getBestLocation();
 				if(bestKnownLocation != null){
 					navigation.navigate(bestKnownLocation);
@@ -120,7 +130,7 @@ public class Fight extends Activity {
 			}
         }
         else{
-            log.log(Level.WARNING, "Chosen enemy null [FightEnemy.run()]");
+            log.log(Level.SEVERE, "Chosen enemy info null [FightEnemy.run()]");
         }
 	}
 
@@ -132,7 +142,7 @@ public class Fight extends Activity {
 
 	@Override
 	protected boolean activityParametrsEquals(Object activity) {
-		return this.chosenEmemy.getId().equals(((Fight) activity).chosenEmemy.getId()); 
+		return this.chosenEmemyInfo.getId().equals(((Fight) activity).chosenEmemyInfo.getId()); 
 	}
 	
 	private void doExpertMove(Player player) {
@@ -172,6 +182,11 @@ public class Fight extends Activity {
 			}
 			move.jump();
 		}
+	}
+
+	@Override
+	protected void init() {
+		
 	}
 	
 }

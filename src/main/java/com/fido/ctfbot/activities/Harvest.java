@@ -30,7 +30,6 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
-import cz.cuni.amis.utils.Cooldown;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -66,9 +65,17 @@ public class Harvest extends HighLevelActivity {
 	
 	private final double minDistance;
 	
-	private ArrayList<ItemInfo> harvestingPriorities;
+	/**
+	 * recalculating on every main target pickup
+	 */
+	protected ArrayList<ItemInfo> harvestingPriorities;
 	
-	private ItemInfo chosenItem;
+	/**
+	 * recalculating only on harvest init
+	 */
+	private ArrayList<ItemInfo> posibleItemSForHarvest;
+	
+	protected ItemInfo chosenItem;
 	
 	private final NavigationUtils navigationUtils;
 	
@@ -118,12 +125,13 @@ public class Harvest extends HighLevelActivity {
 			else{
 				chosenItem = harvestingPriorities.get(0);
                 
-				log.log(Level.INFO, "Item for harvest chosen: {0} [Harvest.run()]", chosenItem);
+				log.log(Level.INFO, "Item for harvest chosen: {0}, location: {1}[Harvest.run()]", 
+						new String[]{chosenItem.getItem().toString(), chosenItem.getItem().getLocation().toString()});
 				runChildActivity(new Move(informationBase, log, this, chosenItem.getItem().getLocation()));
 			}
 		}
 		else{
-			log.log(Level.INFO, "Item for harvesting allready chosen [Harvest.run()]");
+			log.log(Level.INFO, "Item for harvesting already chosen: {0} [Harvest.run()]", chosenItem.getItem());
 			currentChildActivity.run();
 		}
 	}
@@ -148,13 +156,13 @@ public class Harvest extends HighLevelActivity {
 			
 	}
 	
-	private void callculateHarvestingPriority() {
+	protected void callculateHarvestingPriority() {
 		log.log(Level.INFO, "Calculating harvesting priorities - start [Harvest.callculateHarvestingPriority()]");
         for (ItemTypeInfo itemTypeStatistic : informationBase.getItemTypesInfo().values()) {
             itemTypeStatistic.countOverallPriority();
         }
 		
-		harvestingPriorities = new ArrayList<ItemInfo>(informationBase.getItemsInfo().values());
+		harvestingPriorities = new ArrayList<ItemInfo>(posibleItemSForHarvest);
 		
 		Iterator<ItemInfo> iterator = harvestingPriorities.iterator();
 		while (iterator.hasNext()) {
@@ -164,21 +172,13 @@ public class Harvest extends HighLevelActivity {
 		  
 			// we remove from the list items, that is not pickable, 
 			if(!items.isPickable(itemInfo.getItem()) || 
-					// or is not reachable
-					!informationBase.isReachable(itemNavPoint) ||					
 					// or is not spwawned yet              
 					!itemInfo.isItemSpawned() ||
-					// or is too far
-					searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
-							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance ||
-					// or is too close 
-					minDistance != 0 && bot.getNavigationUtils().getDistance(
-							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance ||
 					// point not used test
 					navigationUtils.isNavPointOccupied(itemNavPoint)
 					){
 				iterator.remove();
-				debugRemovalCause(itemInfo);
+//				debugRemovalCause(itemInfo);
 			}
 			else {
 				itemInfo.countOverallPriority();
@@ -211,6 +211,39 @@ public class Harvest extends HighLevelActivity {
 		else{
 			log.log(Level.INFO, "Item removed for unknown reason: {0} [Harvest.debugRemovalCause()]", itemInfo);
 		}
+	}
+
+	private void initPossibleItemsForHarvest() {
+		log.log(Level.INFO, "Initalizing possible items for harvest - start [Harvest.initPossibleItemsForHarvest()]");
+		
+		posibleItemSForHarvest = new ArrayList<ItemInfo>(informationBase.getItemsInfo().values());
+		
+		Iterator<ItemInfo> iterator = posibleItemSForHarvest.iterator();
+		while (iterator.hasNext()) {
+			ItemInfo itemInfo = iterator.next(); 
+			
+			NavPoint itemNavPoint = itemInfo.getItem().getNavPoint();
+		  
+			
+			if(		// we gonna remove items that is not reachable
+					!informationBase.isReachable(itemNavPoint) ||					
+					// or is too far
+					searchingAreaCenter != null && bot.getNavigationUtils().getDistance(
+							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance ||
+					// or is too close 
+					minDistance != 0 && bot.getNavigationUtils().getDistance(
+							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance
+					){
+				iterator.remove();
+//				debugRemovalCause(itemInfo);
+			}
+		}
+		log.log(Level.INFO, "Initalizing possible items for harvest - end [Harvest.initPossibleItemsForHarvest()]");
+	}
+
+	@Override
+	protected void init() {
+		initPossibleItemsForHarvest();
 	}
 	
 }

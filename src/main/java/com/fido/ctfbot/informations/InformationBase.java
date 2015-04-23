@@ -324,10 +324,10 @@ public final class InformationBase {
 	
 	public UnrealId getNearestFriendTo(Location nearestTo, HashMap<UnrealId, FriendInfo> friends){
 		FriendInfo randomFriend = friends.entrySet().iterator().next().getValue();
-		double minDistance = getDistance(randomFriend.getBestLocation(), nearestTo);
+		double minDistance = bot.getNavigationUtils().getDistance(randomFriend.getBestLocation(), nearestTo);
 		UnrealId minDistanceFriendId = randomFriend.getId();
 		for(FriendInfo friend : friends.values()){
-			double distance = getDistance(friend.getBestLocation(), nearestTo);
+			double distance = bot.getNavigationUtils().getDistance(friend.getBestLocation(), nearestTo);
 			log.log(Level.INFO, "player {0} at location {1} checked for distance. Distance = {2} [getNearestFriendTo()]", 
 					new String[]{friend.getName(), 
 						friend.getBestLocation() == null ? "null" : friend.getBestLocation().toString(), 
@@ -342,13 +342,6 @@ public final class InformationBase {
 	
 	public UnrealId getNearestFriendTo(Location nearestTo){ 
 		return getNearestFriendTo(nearestTo, friends);
-	}
-	
-	public double getDistance(ILocated from, ILocated to){
-//		if(mainPathPlanner instanceof FloydWarshallMap){		
-			return fwMap.getDistance(info.getNearestNavPoint(from), info.getNearestNavPoint(to));
-//		}
-		
 	}
 
 	public void initFlags() {

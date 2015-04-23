@@ -46,45 +46,45 @@ import java.util.logging.Level;
  */
 public class Move extends Activity implements FlagListener<NavigationState> {
 	
-	private static final double MAX_DISTANCE_INCREASE = 500;
+	protected static final double MAX_DISTANCE_INCREASE = 500;
 	
 	
 	
 	
-	private final IUT2004Navigation navigation;
+	protected final IUT2004Navigation navigation;
 
-	private final Players players;
+	protected final Players players;
 	
-	private final ImprovedShooting shoot;
+	protected final ImprovedShooting shoot;
 	
-	private final WeaponPrefs weaponPrefs;
+	protected final WeaponPrefs weaponPrefs;
 	
-	private final AgentInfo info;
+	protected final AgentInfo info;
 	
-	private final FloydWarshallMap fwMap;
+	protected final FloydWarshallMap fwMap;
 	
-	private final NavPoints navPoints;
+	protected final NavPoints navPoints;
 	
-	private final AdvancedLocomotion move;
-	
-	
-	
-	private final Location mainTarget;
-	
-	private final RecentSpotedItems recentSpotedItems;
-	
-	private final NavigationUtils navigationUtils;
-	
-	private final ArrayList<NavPoint> stuckHandleUsedNavpoints;
+	protected final AdvancedLocomotion move;
 	
 	
-	private Location currentTarget;
 	
-	private boolean currentTargetReached = false;
+	protected final Location mainTarget;
 	
-	private Location referenceLocationForDetectingStuck;
+	protected final RecentSpotedItems recentSpotedItems;
 	
-	private final Cooldown stuckDetectCooldown = new Cooldown(1000);		
+	protected final NavigationUtils navigationUtils;
+	
+	protected final ArrayList<NavPoint> stuckHandleUsedNavpoints;
+	
+	
+	protected Location currentTarget;
+	
+	protected boolean currentTargetReached = false;
+	
+	protected Location referenceLocationForDetectingStuck;
+	
+	protected final Cooldown stuckDetectCooldown = new Cooldown(1000);		
 	
 	
 	public Move(InformationBase informationBase, LogCategory log, ICaller caller, Location target) {
@@ -102,11 +102,10 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		navigationUtils = bot.getNavigationUtils();
         this.currentTarget = target;
 		this.mainTarget = target;
-		navigation.addStrongNavigationListener(this);
 		stuckHandleUsedNavpoints = new ArrayList<NavPoint>();
-		referenceLocationForDetectingStuck = info.getLocation();
-		stuckDetectCooldown.use();
 	}
+	
+	
 
 	@Override
 	public void run() {
@@ -122,7 +121,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		// navigovate only if we don't navigating, or we navigating to different target
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(currentTarget)){
 			log.log(Level.INFO, "It's necessary to change the target [Move.run()]");
-//            bot.getDebugTools().drawIntention(currentTarget);
+            bot.getDebugTools().drawIntention(currentTarget);
 			navigation.navigate(currentTarget);
 			currentTargetReached = false;
 			log.log(Level.INFO, "Target changed [Move.run()]");
@@ -144,6 +143,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			if(info.getLocation().equals(referenceLocationForDetectingStuck)){
 				handleStuck();
 			}
+			referenceLocationForDetectingStuck = info.getLocation();
 		}
 	}
 
@@ -158,17 +158,15 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		return mainTarget.equals(((Move) obj).mainTarget);
 	}
 
-	private void tryToRecountPathAcrossItems() {
+	protected void tryToRecountPathAcrossItems() {
 		log.log(Level.INFO, "Recalculating path across usefull items - start [Move.tryToRecountPathAcrossItems()]");
 		ArrayList<Item> spotedItemsSorted = recentSpotedItems.getAllSorted();
 		
 		for(Item item : spotedItemsSorted){
 			ItemInfo itemInfo = informationBase.getItemInfo(item);
 			
-			boolean isWorthTaking = 
-					itemInfo == null ? informationBase.isWorthTakeWhileNavigating(item) : 
-						itemInfo.isWorthTakeWhileNavigating();
-	
+			boolean isWorthTaking = isItemWorthTakingWhileMoving(item, itemInfo);
+					
 			if(isWorthTaking){
 				NavPoint itemNavPoint = 
 						itemInfo == null ? 
@@ -217,7 +215,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		}
 	}
 
-	private void handleTargetReached() {
+	protected void handleTargetReached() {
 		// we do something only when notification is aquired for the first time
 		if(!currentTargetReached){
 			currentTargetReached = true;
@@ -232,7 +230,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		}
 	}
 
-	private void handleStuck() {
+	protected void handleStuck() {
 		log.log(Level.SEVERE, "Stuck handled at position {0} [Move.handleStuck()]", currentTarget);
 		stuckHandleUsedNavpoints.add(navigation.getNearestNavPoint(currentTarget));
 		NavPoint newTargetNavpoint = 
@@ -249,7 +247,10 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 								!navigationUtils.isNavPointOccupied(navpoint) &&
 
 								// used navpoints test
-								!stuckHandleUsedNavpoints.contains(navpoint);
+								!stuckHandleUsedNavpoints.contains(navpoint) &&
+								
+								// distance test
+								navigationUtils.getDistanceFrom(navpoint.getLocation()) < 10000;
 					}
 				});
 		if(newTargetNavpoint != null){
@@ -260,6 +261,18 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			move.turnHorizontal(90);
 			log.log(Level.WARNING, "No new target chosen - trying to rotate [Move.handleStuck()]");
 		}
+	}
+
+	protected boolean isItemWorthTakingWhileMoving(Item item, ItemInfo itemInfo) {
+		return itemInfo == null ? informationBase.isWorthTakeWhileNavigating(item) : 
+						itemInfo.isWorthTakeWhileNavigating();
+	}
+
+	@Override
+	protected void init() {
+		stuckDetectCooldown.use();
+		navigation.addStrongNavigationListener(this);
+		referenceLocationForDetectingStuck = info.getLocation();
 	}
 	
 	

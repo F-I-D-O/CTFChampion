@@ -27,6 +27,7 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.event.WorldObjectAppearedEve
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004Bot;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbcommands.Initialize;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.BotDamaged;
@@ -118,6 +119,8 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	private final Cooldown sendFlagPositionMessageCooldown = new Cooldown(500);
 	
+	private boolean bioRifleCharged = false;
+	
 	
 	
 	
@@ -174,6 +177,14 @@ public class CTFChampion extends UT2004BotTCController {
 
 	public ComunicationModule getComunicationModule() {
 		return comunicationModule;
+	}
+
+	public boolean isBioRifleCharged() {
+		return bioRifleCharged;
+	}
+
+	public void setBioRifleCharged(boolean bioRifleCharged) {
+		this.bioRifleCharged = bioRifleCharged;
 	}
 	
     
@@ -600,21 +611,30 @@ public class CTFChampion extends UT2004BotTCController {
 
 	private void initRangeWeaponPreferences() {
 		
-		// First range class is defined from 0 to 80 ut units (1 ut unit ~ 1 cm)
+		// melee - under 80cm
         weaponPrefs.newPrefsRange(80).add(UT2004ItemType.SHIELD_GUN, true);
         // Only one weapon is added to this close combat range and it is SHIELD GUN		
 			
-        // Second range class is from 80 to 1000 ut units (its always from the previous class to the maximum
-        // distance of actual class. More weapons are in this class with FLAK CANNON having the top priority.
-        weaponPrefs.newPrefsRange(1000).add(UT2004ItemType.FLAK_CANNON, true).add(UT2004ItemType.MINIGUN, true)
-                .add(UT2004ItemType.LINK_GUN, false).add(UT2004ItemType.ASSAULT_RIFLE, true);        
+        // short range - under 10 meters
+        weaponPrefs.newPrefsRange(1000)
+				.add(UT2004ItemType.FLAK_CANNON, true)
+				.add(UT2004ItemType.SHOCK_RIFLE, true)
+				.add(UT2004ItemType.MINIGUN, true)
+                .add(UT2004ItemType.LINK_GUN, false)
+				.add(UT2004ItemType.BIO_RIFLE, true)  
+				.add(UT2004ItemType.ASSAULT_RIFLE, true);        
 				
-        // Third range class is from 1000 to 4000 ut units - that's quite far actually
-        weaponPrefs.newPrefsRange(4000).add(UT2004ItemType.SHOCK_RIFLE, true).add(UT2004ItemType.MINIGUN, false);
+        // Under 40 meters  - long range guns
+        weaponPrefs.newPrefsRange(4000)
+				.add(UT2004ItemType.LIGHTNING_GUN, true)
+				.add(UT2004ItemType.ROCKET_LAUNCHER, true)
+				.add(UT2004ItemType.SHOCK_RIFLE, true)
+				.add(UT2004ItemType.MINIGUN, false);
 				
-        // The last range class is from 4000 to 100000 ut units. In practise 100000 is
-        // the same as infinity as there is no map in UT that big
-        weaponPrefs.newPrefsRange(100000).add(UT2004ItemType.LIGHTNING_GUN, true).add(UT2004ItemType.SHOCK_RIFLE, true);
+        // sniper guns - infinity range
+        weaponPrefs.newPrefsRange(100000)
+				.add(UT2004ItemType.LIGHTNING_GUN, true)
+				.add(UT2004ItemType.SHOCK_RIFLE, true);
 	}
 
 	/**
@@ -660,7 +680,7 @@ public class CTFChampion extends UT2004BotTCController {
 		informationBase.processMissingPlayers();
 		// there we expecttwo teams and human player as observer.
 		if(informationBase.getFriends().size() + informationBase.getEnemies().size() >= 
-				InformationBase.TEAM_SIZE  + 1){
+				InformationBase.TEAM_SIZE *2+ 1){
 			allBotsInGame = true;
 			return true;
 		}

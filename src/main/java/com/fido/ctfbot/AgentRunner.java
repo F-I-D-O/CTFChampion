@@ -34,29 +34,38 @@ public class AgentRunner {
 	 */
 	public static UT2004TCServer tcServer;
 	
+	private static String year;
+	
+	private static int team;
+	
+	private static int skill;
+	
+	private static int numberOfBotsInTeam;
+	
+	private static String server;
+	
     /**
      * This method is called when the bot is started either from IDE or from command line.
      * @param args
      */
     public static void main(String args[]) throws PogamutException {
 		
-		// Start TC (~ TeamCommunication) Server first.
+//		for (int i = 0; i < args.length; i++) {
+//			System.out.println(args[i]);
+//		}
+		
+		year = args[0];
+		team = Integer.parseInt(args[1]);
+		skill =  Integer.parseInt(args[2]);
+		numberOfBotsInTeam = Integer.parseInt(args[3]);
+		server = args[4];
+
     	tcServer = UT2004TCServer.startTCServer();
 		
-//        UT2004BotRunner br = new UT2004BotRunner(     // class that wrapps logic for bots executions, suitable to run single bot in single JVM
-//                CTFChampion.class,  // which UT2004BotController it should instantiate
-//                "CTF Champion"       // what name the runner should be using
-//        ).setMain(true);          // tells runner that is is executed inside MAIN method, thus it may block the thread and watch whether agent/s are correctly executed
-//		br.startAgents(3).;          // tells the runner to start 1 agent
-		
-		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost("localhost").setPort(3000).setLogLevel(Level.WARNING).startAgents(
-//                new UT2004BotParameters().setTeam(0),
-//                new UT2004BotParameters().setTeam(0),
-//				new UT2004BotParameters().setTeam(0)
-                
-                new CTFChampionBotParams().setTeam(1),
-                new CTFChampionBotParams().setTeam(1),
-				new CTFChampionBotParams().setTeam(1)
+		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost(server).setPort(3000).setLogLevel(Level.WARNING).startAgents(           
+                new CTFChampionBotParams().setSkillLevel(skill).setTeam(team),
+                new CTFChampionBotParams().setSkillLevel(skill).setTeam(team),
+				new CTFChampionBotParams().setSkillLevel(skill).setTeam(team)
 		);
     }
 }

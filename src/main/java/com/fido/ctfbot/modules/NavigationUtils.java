@@ -143,5 +143,9 @@ public class NavigationUtils extends CTFChampionModule {
 				return;
 		}
 	}
+
+	public double getDistanceFrom(Location location) {
+		return getDistance(info.getLocation(), location);
+	}
 	
 }

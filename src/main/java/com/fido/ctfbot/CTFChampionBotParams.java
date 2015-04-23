@@ -43,6 +43,8 @@ public class CTFChampionBotParams extends UT2004BotParameters{
 		return skillLevel;
 	}
 	
+	
+	
 	public CTFChampionBotParams setSkillLevel(int skillLevel) {
 		this.skillLevel = skillLevel;
 		return this;
