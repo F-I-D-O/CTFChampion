@@ -206,7 +206,7 @@ public class TakePosition extends HighLevelActivity {
 		move.turnTo(nearTo);
 		if(weaponry.hasLoadedWeapon(UT2004ItemType.BIO_RIFLE) && !bot.isBioRifleCharged()){
 			shoot.changeWeapon(UT2004ItemType.BIO_RIFLE);
-			shoot.shootSecondary(navPoints.getNearestVisibleNavPoint());
+			shoot.shootSecondary(navPoints.getNearestNavPoint());
 			bot.setBioRifleCharged(true);
 		}
 //		move.turnHorizontal(120);
