@@ -29,6 +29,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
 import cz.cuni.amis.utils.Cooldown;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Level;
 
 /**
@@ -198,18 +199,21 @@ public class StrategyPlanner extends CTFChampionModule{
     }
 
 	private void processRequests() {
-		for (RequestMessage playerRequest : playerRequests) {
+		Iterator<RequestMessage> requstsIterator = playerRequests.iterator();
+		while (requstsIterator.hasNext()) {
+			RequestMessage playerRequest = requstsIterator.next();
 			boolean requestAccepted = processRequest(playerRequest);
 			
 			// we only accept one request a turn
 			if(requestAccepted){
+				requstsIterator.remove();
 				break;
 			}
 		}
 	}
 
 	private boolean processRequest(RequestMessage playerRequest) {
-		log.log(Level.WARNING, "Procesing request: {0} [processRequest()]", playerRequest.getRequestType());
+		log.log(Level.INFO, "Procesing request: {0} [processRequest()]", playerRequest.getRequestType());
 		switch(playerRequest.getRequestType()){
 			case END_HARVEST:
 				return processEndHarvestRequest(playerRequest);
@@ -224,10 +228,10 @@ public class StrategyPlanner extends CTFChampionModule{
 	}
 
 	private boolean processEndHarvestRequest(RequestMessage playerRequest) {
-		log.log(Level.WARNING, "Procesing end harvest request: {0} [processRequest()]", playerRequest.getRequestType());
+		log.log(Level.INFO, "Procesing end harvest request: {0} [processRequest()]", playerRequest.getRequestType());
 		boolean commandIssued;
 		if(exchangeGuardingRolesCooldown.isCool()){
-			log.log(Level.WARNING, "End harvest request - roles will be exchanged [processEndHarvestRequest()]");
+			log.log(Level.INFO, "End harvest request - roles will be exchanged [processEndHarvestRequest()]");
 			exchangeGuardingRolesCooldown.use();
 			commandIssued = issueCommand(informationBase.getFrindByGoal(Goal.GUARD_OUR_FLAG), Goal.HARVEST_NEAR_OUR_BASE);
 			
@@ -237,7 +241,7 @@ public class StrategyPlanner extends CTFChampionModule{
 			}
 		}
 		else{
-			log.log(Level.WARNING, "End harvest request - cannot exchange roles - there will be two guards [processEndHarvestRequest()]");
+			log.log(Level.INFO, "End harvest request - cannot exchange roles - there will be two guards [processEndHarvestRequest()]");
 			commandIssued = issueCommand(informationBase.getFriends().get(playerRequest.getPlayerId()), 
 					Goal.GUARD_OUR_FLAG);
 		}
