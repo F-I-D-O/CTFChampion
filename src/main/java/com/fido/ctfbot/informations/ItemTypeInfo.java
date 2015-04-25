@@ -49,24 +49,24 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 		
 		// guns
 		map.put(UT2004ItemType.ASSAULT_RIFLE, 3);
-		map.put(UT2004ItemType.ASSAULT_RIFLE_AMMO, 2);
-		map.put(UT2004ItemType.ASSAULT_RIFLE_GRENADE, 1);
+		map.put(UT2004ItemType.ASSAULT_RIFLE_AMMO, 1);
+		map.put(UT2004ItemType.ASSAULT_RIFLE_GRENADE, 0);
 		map.put(UT2004ItemType.BIO_RIFLE, 3);
 		map.put(UT2004ItemType.BIO_RIFLE_AMMO, 3);
-		map.put(UT2004ItemType.FLAK_CANNON, 10);
+		map.put(UT2004ItemType.FLAK_CANNON, 12);
 		map.put(UT2004ItemType.FLAK_CANNON_AMMO, 9);
 		map.put(UT2004ItemType.ION_PAINTER, 0);
 		map.put(UT2004ItemType.ION_PAINTER_AMMO, 0);
-		map.put(UT2004ItemType.LIGHTNING_GUN, 6);
-		map.put(UT2004ItemType.LIGHTNING_GUN_AMMO, 5);
-		map.put(UT2004ItemType.LINK_GUN, 3);
-		map.put(UT2004ItemType.LINK_GUN_AMMO, 2);
-		map.put(UT2004ItemType.MINIGUN, 9);
-		map.put(UT2004ItemType.MINIGUN_AMMO, 7);
-		map.put(UT2004ItemType.ROCKET_LAUNCHER, 11);
-		map.put(UT2004ItemType.ROCKET_LAUNCHER_AMMO, 9);
-		map.put(UT2004ItemType.SHIELD_GUN, 3);
-		map.put(UT2004ItemType.SHIELD_GUN_AMMO, 2);
+		map.put(UT2004ItemType.LIGHTNING_GUN, 9);
+		map.put(UT2004ItemType.LIGHTNING_GUN_AMMO, 6);
+		map.put(UT2004ItemType.LINK_GUN, 5);
+		map.put(UT2004ItemType.LINK_GUN_AMMO, 3);
+		map.put(UT2004ItemType.MINIGUN, 8);
+		map.put(UT2004ItemType.MINIGUN_AMMO, 5);
+		map.put(UT2004ItemType.ROCKET_LAUNCHER, 8);
+		map.put(UT2004ItemType.ROCKET_LAUNCHER_AMMO, 6);
+		map.put(UT2004ItemType.SHIELD_GUN, 0);
+		map.put(UT2004ItemType.SHIELD_GUN_AMMO, 0);
 		map.put(UT2004ItemType.SHOCK_RIFLE, 4);
 		map.put(UT2004ItemType.SHOCK_RIFLE_AMMO, 3);
 		map.put(UT2004ItemType.SNIPER_RIFLE, 6);
@@ -111,6 +111,11 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 	public double getOverallPriority() {
 		return overallPriority;
 	}
+
+	public int getStaticPriority() {
+		return staticPriority;
+	}
+	
 	
 	
 	

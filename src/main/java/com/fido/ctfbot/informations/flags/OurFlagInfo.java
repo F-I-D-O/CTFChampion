@@ -33,6 +33,14 @@ public class OurFlagInfo extends FlagInfo {
 		super(informationBase, flag, lastKnownPosition, lastKnownPositionTime);
 	}
 
+	@Override
+	public boolean lastKnownLocationTimeExpired() {
+		if(informationBase.getCtf().isOurFlagDropped()){
+			return false;
+		}
+		return super.lastKnownLocationTimeExpired(); //To change body of generated methods, choose Tools | Templates.
+	}
 
+	
     
 }
