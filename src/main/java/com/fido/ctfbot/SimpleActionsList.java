@@ -14,28 +14,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot.informations.players;
+package com.fido.ctfbot;
 
-import com.fido.ctfbot.informations.InformationBase;
-import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
-import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
-import cz.cuni.amis.utils.Cooldown;
+import com.fido.ctfbot.actions.SimpleAction;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
+import java.util.ArrayList;
 
 /**
  *
  * @author Fido
  */
-public class EnemyInfo extends PlayerInfo{
+public class SimpleActionsList {
 	
-	private static final long LOCATION_RESEND_TIME = 1000;
-	
-	public EnemyInfo(InformationBase informationBase, Player player, Players players) {
-		super(informationBase, null, 0, player.getId(), player, players, new Cooldown(LOCATION_RESEND_TIME));
-	}
+	private final ArrayList<SimpleAction> simpleActions;
 
-	public EnemyInfo(InformationBase informationBase, UnrealId id, Players players) {
-		super(informationBase, null, 0, id, null, players,  new Cooldown(LOCATION_RESEND_TIME));
-	}	
 	
+	
+	
+	
+	public SimpleActionsList() {
+		this.simpleActions = new ArrayList<SimpleAction>();
+	}
+	
+	
+	
+	
+	public synchronized void addSimpleAction(SimpleAction simpleAction){
+		simpleActions.add(simpleAction);
+	}
+	
+	public synchronized ArrayList<SimpleAction> getCopySimpleActions(){
+		return new ArrayList<SimpleAction>(simpleActions);
+	}
+	
+	public synchronized void remove(SimpleAction simpleAction){
+		simpleActions.remove(simpleAction);
+	}
 }

@@ -17,27 +17,70 @@
 package com.fido.ctfbot.modules;
 
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.RequestType;
+import com.fido.ctfbot.SimpleActionsList;
+import com.fido.ctfbot.actions.SimpleAction;
+import com.fido.ctfbot.informations.InformationBase;
+import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
+import java.util.ArrayList;
+import java.util.logging.Level;
 
 /**
  *
  * @author Fido
  */
-public class ActionPlanner {
+public class ActionPlanner extends CTFChampionModule{
 	
 	private ActivityPlanner activityPlanner;
+	
+	private final SimpleActionsList simpleActionsList;
 
-	public ActionPlanner(CTFChampion bot) {
+	public ActionPlanner(ActivityPlanner activityPlanner, CTFChampion bot, LogCategory log, InformationBase informationBase) {
+		super(bot, log, informationBase);
+		this.activityPlanner = activityPlanner;
 		
+		this.simpleActionsList = new SimpleActionsList();
 	}
+	
+
+
 	
 	public void init(ActivityPlanner activityPlanner){
 		this.activityPlanner = activityPlanner;
 	}
 	
 	public void takeOver(){
+		processSimpleActions();
 		
 		activityPlanner.takeOver();
 	}
+
+	private void processSimpleActions() {
+		ArrayList<SimpleAction> simpleActions = simpleActionsList.getCopySimpleActions();
+		if(!simpleActions.isEmpty()){
+			for(SimpleAction simpleAction : simpleActions){
+				processSimpleAction(simpleAction);
+				simpleActionsList.remove(simpleAction);
+			}
+		}
+	}
+
+	private void processSimpleAction(SimpleAction simpleAction) {
+		switch(simpleAction){
+			case REQUEST_GOAL_RESEND:
+				bot.getComunicationModule().sendRequest(RequestType.RESEND_GOAL);
+				break;
+			default:
+				log.log(Level.SEVERE, "Simple action not implemented! {0} [processSimpleAction()]", simpleAction);
+				break;
+		}
+	}
+
+	public void addSimpleAction(SimpleAction simpleAction) {
+		this.simpleActionsList.addSimpleAction(simpleAction);
+	}
+	
+	
 	
 	
 	

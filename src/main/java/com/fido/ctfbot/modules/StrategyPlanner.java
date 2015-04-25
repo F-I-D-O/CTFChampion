@@ -75,7 +75,12 @@ public class StrategyPlanner extends CTFChampionModule{
 			nextStrategy = Strategy.STEAL_ENEMY_FLAG;
 		}
 		else{
-			nextStrategy = Strategy.GET_BACK_OUR_FLAG;
+			if(ctf.isOurTeamCarryingEnemyFlag() && freeBotsReadyForAttack()){
+				nextStrategy = Strategy.PREPARE_FOR_ATTACK_ON_ENEMY_BASE;
+			}
+			else{
+				nextStrategy = Strategy.GET_BACK_OUR_FLAG;
+			}
 		}
 		
 		if(nextStrategy != currentStrategy){
@@ -114,6 +119,9 @@ public class StrategyPlanner extends CTFChampionModule{
 				break;
 			case GET_BACK_OUR_FLAG:
 				succes = getBackOurFlag();
+				break;
+			case PREPARE_FOR_ATTACK_ON_ENEMY_BASE:
+				succes = prepareForAttackOnEnemyBase();
 				break;
 		}
 		return succes;
@@ -198,7 +206,7 @@ public class StrategyPlanner extends CTFChampionModule{
         return commandIssued;
     }
 
-	private void processRequests() {
+	private synchronized void processRequests() {
 		Iterator<RequestMessage> requstsIterator = playerRequests.iterator();
 		while (requstsIterator.hasNext()) {
 			RequestMessage playerRequest = requstsIterator.next();
@@ -217,6 +225,10 @@ public class StrategyPlanner extends CTFChampionModule{
 		switch(playerRequest.getRequestType()){
 			case END_HARVEST:
 				return processEndHarvestRequest(playerRequest);
+			case RESEND_GOAL:
+				return processResendGoalRequest(playerRequest);
+			case ATTACK:
+				return procesAttackRequest(playerRequest);
 			default:
 				log.log(Level.WARNING, "Illegal request: {0} [processRequest()]", playerRequest.getRequestType());
 				return false;
@@ -248,10 +260,54 @@ public class StrategyPlanner extends CTFChampionModule{
 		return commandIssued;
 	}
 
-	public void queueRequest(RequestMessage requestMessage) {
+	public synchronized void queueRequest(RequestMessage requestMessage) {
 		playerRequests.add(requestMessage);
 		log.log(Level.INFO, "Request: {0} from player {1} added to queue [queueRequest()]", 
 				new String[]{requestMessage.getRequestType().toString(), requestMessage.getPlayerId().toString()});
+	}
+
+	private boolean processResendGoalRequest(RequestMessage playerRequest) {
+		log.log(Level.INFO, "Procesing resend goal request: {0} [processRequest()]", playerRequest);
+		FriendInfo friendInfo = informationBase.getFriends().get(playerRequest.getPlayerId());
+		return comunicationModule.sendCommand(friendInfo, friendInfo.getGoal());
+	}
+
+	private boolean prepareForAttackOnEnemyBase() {
+		HashMap<UnrealId,FriendInfo> friendsTmp = getCopyFriendInfo();
+		
+		// firs assign one bot to guard our flag
+		FriendInfo enemyFlagHolder = informationBase.getFriends().get(ctf.getEnemyFlag().getHolder());
+		boolean commandIssued = issueCommand(enemyFlagHolder, Goal.GET_BACK_OUR_FLAG);
+		if(commandIssued){
+			friendsTmp.remove(enemyFlagHolder.getId());
+			
+			// then other to attack
+			return issueCommand(new ArrayList<FriendInfo>(friendsTmp.values()), Goal.PREPARE_FOR_ATTACK);
+
+		}
+		else{
+			return false;
+		}
+	}
+
+	private boolean freeBotsReadyForAttack() {
+		ArrayList<FriendInfo> friendsTmp = new ArrayList<FriendInfo>(informationBase.getFriends().values());
+		FriendInfo enemyFlagHolder = informationBase.getFriends().get(ctf.getEnemyFlag().getHolder());
+		friendsTmp.remove(enemyFlagHolder);
+
+		for (FriendInfo friend : friendsTmp) {
+			if(!friend.isReadyForAttack()){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean procesAttackRequest(RequestMessage playerRequest) {
+		log.log(Level.INFO, "Procesing attack request: {0} [procesAttackRequest()]", playerRequest);
+		FriendInfo friendInfo = informationBase.getFriends().get(playerRequest.getPlayerId());
+		friendInfo.setReadyForAttack(true);
+		return true;
 	}
 	
 }

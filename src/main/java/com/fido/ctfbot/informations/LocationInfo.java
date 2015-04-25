@@ -16,8 +16,8 @@
  */
 package com.fido.ctfbot.informations;
 
-import com.fido.ctfbot.CTFChampion;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.utils.Cooldown;
 import java.util.logging.Level;
 
 /**
@@ -30,6 +30,7 @@ public abstract class LocationInfo extends Info {
     
     protected double lastKnownLocationTime;
 	
+	protected final Cooldown sendPositionMessageCooldown;
 	
 	
 	
@@ -48,16 +49,22 @@ public abstract class LocationInfo extends Info {
 	public void setLastKnownLocationTime(double lastKnownLocationTime) {
 		this.lastKnownLocationTime = lastKnownLocationTime;
 	}
+
+	public Cooldown getSendPositionMessageCooldown() {
+		return sendPositionMessageCooldown;
+	}
 	
 	
 
 	
 	
 	
-	public LocationInfo(InformationBase informationBase, Location lastKnownPosition, double lastKnownPositionTime) {
+	public LocationInfo(InformationBase informationBase, Location lastKnownPosition, double lastKnownPositionTime,
+			Cooldown sendPositionMessageCooldown) {
 		super(informationBase);
 		this.lastKnownLocation = lastKnownPosition;
 		this.lastKnownLocationTime = lastKnownPositionTime;
+		this.sendPositionMessageCooldown = sendPositionMessageCooldown;
 	}
 	
 	

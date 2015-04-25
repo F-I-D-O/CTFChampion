@@ -22,6 +22,7 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
+import cz.cuni.amis.utils.Cooldown;
 import java.util.logging.Level;
 
 /**
@@ -59,8 +60,8 @@ public abstract class PlayerInfo extends LocationInfo {
 	
 
 	public PlayerInfo(InformationBase informationBase, Location lastKnownLocation, double lastKnownLocationTime, 
-			UnrealId playerId, Player player, Players players) {
-		super(informationBase, lastKnownLocation, lastKnownLocationTime);
+			UnrealId playerId, Player player, Players players, Cooldown sendPositionMessageCooldown) {
+		super(informationBase, lastKnownLocation, lastKnownLocationTime, sendPositionMessageCooldown);
 		this.players = players;
 		this.player = player;
 		this.playerId = playerId;

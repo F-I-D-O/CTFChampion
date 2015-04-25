@@ -226,6 +226,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			else {
 				log.log(Level.INFO, "Temporary target reached [Move.flagChanged()]");
 				currentTarget = mainTarget;
+				run();
 			}
 		}
 	}

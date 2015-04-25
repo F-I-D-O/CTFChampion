@@ -37,7 +37,7 @@ import java.util.logging.Level;
  *
  * @author Fido
  */
-public class NavigationUtils extends CTFChampionModule {
+public final class NavigationUtils extends CTFChampionModule {
 	
 	private static final int JUMP_DISTANCE = 200;
 	
@@ -56,8 +56,16 @@ public class NavigationUtils extends CTFChampionModule {
 	
 	private final AdvancedLocomotion move;
 	
+
+	private double halfMapDistance;
+
 	
 	
+	
+	public double getHalfMapDistance() {
+		return halfMapDistance;
+	}
+
 	
 	
 
@@ -70,6 +78,10 @@ public class NavigationUtils extends CTFChampionModule {
 		this.nmNav = nmNav;
 		info = bot.getInfo();
 		move = bot.getMove();
+	}
+	
+	public void initHalfMapSize(){
+		halfMapDistance = getDistance(bot.getCTF().getOurBase().getLocation(), bot.getCTF().getEnemyBase().getLocation());
 	}
 	
 	public double getDistance(Location location1, Location location2){

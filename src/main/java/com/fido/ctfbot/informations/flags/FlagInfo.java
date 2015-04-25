@@ -19,6 +19,7 @@ package com.fido.ctfbot.informations.flags;
 import com.fido.ctfbot.informations.InformationBase;
 import com.fido.ctfbot.informations.LocationInfo;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.utils.Cooldown;
 
 /**
  *
@@ -26,7 +27,9 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
  */
 public abstract class FlagInfo extends LocationInfo{
 	
-	private static final double FLAG_LOCATION_EXPIRE_TIME = 5;
+	private static final double FLAG_LOCATION_EXPIRE_TIME = 9;
+	
+	private static final long LOCATION_RESEND_TIME = 1000;
 	
 	
     
@@ -46,7 +49,7 @@ public abstract class FlagInfo extends LocationInfo{
 
 	public FlagInfo(InformationBase informationBase, cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, 
 			Location lastKnownPosition, double lastKnownPositionTime) {
-		super(informationBase, lastKnownPosition, lastKnownPositionTime);
+		super(informationBase, lastKnownPosition, lastKnownPositionTime, new Cooldown(LOCATION_RESEND_TIME));
 		this.flag = flag;
 	}
 	
@@ -59,7 +62,7 @@ public abstract class FlagInfo extends LocationInfo{
 
 	@Override
 	public boolean lastKnownLocationTimeExpired() {
-		return informationBase.getInfo().getTime() - lastKnownLocationTime < FLAG_LOCATION_EXPIRE_TIME; 
+		return informationBase.getInfo().getTime() - lastKnownLocationTime > FLAG_LOCATION_EXPIRE_TIME; 
 	}
 	
 	

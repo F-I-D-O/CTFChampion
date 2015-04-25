@@ -26,11 +26,19 @@ import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 public class EnemyFlagInfo extends FlagInfo{
 	
 	private static final double ENEMY_FLAG_LOCATION_EXPIRE_TIME = 5;
+	
+	public static final double ENEMY_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION = 2000;
 
 	public EnemyFlagInfo(InformationBase informationBase, cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag, Location lastKnownPosition, double lastKnownPositionTime) {
 		super(informationBase, flag, lastKnownPosition, lastKnownPositionTime);
 	}
     
-    
+    @Override
+	public boolean lastKnownLocationTimeExpired() {
+		if(informationBase.getCtf().isEnemyFlagDropped()){
+			return false;
+		}
+		return super.lastKnownLocationTimeExpired(); //To change body of generated methods, choose Tools | Templates.
+	}
     
 }

@@ -21,5 +21,7 @@ package com.fido.ctfbot;
  * @author Fido
  */
 public enum RequestType {
-	END_HARVEST
+	END_HARVEST,
+	RESEND_GOAL, 
+	ATTACK
 }

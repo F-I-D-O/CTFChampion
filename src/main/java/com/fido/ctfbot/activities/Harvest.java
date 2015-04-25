@@ -29,6 +29,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Game;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Items;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.NavPoint;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,8 +43,6 @@ import java.util.logging.Level;
 public class Harvest extends HighLevelActivity {
 	
 	public static final double HARVEST_NEAR_BASE_DISTANCE_LIMIT = 3000;
-	
-	
 	
 	
 	
@@ -232,7 +231,11 @@ public class Harvest extends HighLevelActivity {
 							searchingAreaCenter, itemInfo.getItem().getLocation()) > maxDistance ||
 					// or is too close 
 					minDistance != 0 && bot.getNavigationUtils().getDistance(
-							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance
+							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance ||
+					
+					// unusable items test
+					informationBase.getItemTypesInfo().get((UT2004ItemType) itemInfo.getItem().getType())
+							.getStaticPriority() == 0
 					){
 				iterator.remove();
 //				debugRemovalCause(itemInfo);

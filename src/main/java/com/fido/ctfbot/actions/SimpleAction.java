@@ -14,14 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.fido.ctfbot;
+package com.fido.ctfbot.actions;
 
 /**
  *
  * @author Fido
  */
-public enum Strategy {
-	STEAL_ENEMY_FLAG,
-	GET_BACK_OUR_FLAG,
-	PREPARE_FOR_ATTACK_ON_ENEMY_BASE
+public enum SimpleAction {
+	REQUEST_GOAL_RESEND
 }

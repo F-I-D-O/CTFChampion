@@ -26,9 +26,9 @@ import com.fido.ctfbot.informations.flags.OurFlagInfo;
 import com.fido.ctfbot.informations.players.EnemyInfo;
 import com.fido.ctfbot.informations.players.PlayerInfo;
 import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
-import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
+import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weapon;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weaponry;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.CTF;
@@ -130,6 +130,8 @@ public final class InformationBase {
 	
 	private int numberOfNotConnectedPlayers = 0;
 	
+	private FriendInfo selfInfo;
+	
 	
 	
 		
@@ -225,6 +227,10 @@ public final class InformationBase {
 	public LogCategory getLog() {
 		return log;
 	}
+
+	public FriendInfo getSelfInfo() {
+		return selfInfo;
+	}
 	
 	
 	
@@ -306,6 +312,7 @@ public final class InformationBase {
 		FriendInfo friendInfo = new FriendInfo(this, info, players);
 		friends.put(info.getId(), friendInfo);
 		allPlayersInfo.put(info.getId(), friendInfo);
+		selfInfo = friendInfo;
 	}
 	
 	public void addPlayersAlreadyInGame(){
@@ -400,7 +407,9 @@ public final class InformationBase {
 	public void initItemTypeInfo() {
 		for (Map.Entry<UT2004ItemType, Integer> staticPriority : 
 				ItemTypeInfo.ITEM_TYPE_STATISTIC_PRIORITIES.entrySet()) {
-			if(items.getAllItems(staticPriority.getKey()).size() > 0){
+			if(items.getAllItems(staticPriority.getKey()).size() > 0 
+					|| staticPriority.getKey() == UT2004ItemType.ASSAULT_RIFLE
+					|| staticPriority.getKey() == UT2004ItemType.SHIELD_GUN){
 				itemTypesInfo.put(staticPriority.getKey(), 
 					new ItemTypeInfo(this, staticPriority.getKey(), staticPriority.getValue(), weaponry, info, log, game));
 			}
@@ -489,19 +498,25 @@ public final class InformationBase {
 	}
 
 	public boolean amIArmed() {
-		if(
-				// enough weapons test
-				weaponry.getLoadedRangedWeapons().size() < 3){
-			return false;
+		
+		// enough weapons test
+		for(Weapon weapon : weaponry.getLoadedRangedWeapons().values()){
+			ItemTypeInfo itemTypeInfo = itemTypesInfo.get((UT2004ItemType) weapon.getType());
+			if(itemTypeInfo.getStaticPriority() > 7){
+				return true;
+			}
 		}
-		return true;
+		
+		return false;
 	}
 
 	public void updateFlagLocation(InfoType infoType, Location location) {
+		
 		FlagInfo flagInfo = infoType == InfoType.OUR_FLAG ? ourFlagInfo : enemyFlagInfo;
 		
 		flagInfo.setLastKnownLocation(location);
 		flagInfo.setLastKnownLocationTime(info.getTime());
+		log.log(Level.INFO, "{0} location updated. [updateFlagLocation()]", infoType);
 	}
 	
 	public int getNumberOfBotsInGame(){
@@ -527,6 +542,10 @@ public final class InformationBase {
 
 	public boolean isWorthTakeWhileNavigating(Item item) {
 		return items.isPickable(item) && items.isPickupSpawned(item);
+	}
+
+	public boolean amIReadyForAttack() {
+		return amIArmed() && info.getHealth() + info.getArmor() > 90;
 	}
 
 	

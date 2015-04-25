@@ -36,6 +36,8 @@ public class FriendInfo extends PlayerInfo{
 	
 	private Goal goal;
 	
+	private boolean readyForAttack;
+	
 
 	
 
@@ -47,21 +49,32 @@ public class FriendInfo extends PlayerInfo{
 		this.goal = goal;
 	}
 	
+	public boolean isReadyForAttack() {
+		return readyForAttack;
+	}
+
+	public void setReadyForAttack(boolean readyForAttack) {
+		this.readyForAttack = readyForAttack;
+	}
+	
+	
+	
+	
 
 	public FriendInfo(InformationBase informationBase, Player player, Players players) {
-		super(informationBase, null, 0, player.getId(), player, players);
+		super(informationBase, null, 0, player.getId(), player, players, null);
 		this.info = null;
 		init();
 	}
 	
 	public FriendInfo(InformationBase informationBase, UnrealId playerId, Players players) {
-		super(informationBase, null, 0, playerId, null, players);
+		super(informationBase, null, 0, playerId, null, players, null);
 		this.info = null;
 		init();
 	}
 	
 	public FriendInfo(InformationBase informationBase, AgentInfo info, Players players) {
-		super(informationBase, info.getLocation(), info.getTime(), info.getId(), null, players);
+		super(informationBase, info.getLocation(), info.getTime(), info.getId(), null, players, null);
 		this.info = info;
 		init();
 	}
@@ -103,6 +116,8 @@ public class FriendInfo extends PlayerInfo{
 	public boolean isMe(){
 		return info != null;
 	}
+
+	
 
 
 }

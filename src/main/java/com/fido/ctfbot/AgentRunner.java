@@ -44,6 +44,8 @@ public class AgentRunner {
 	
 	private static String server;
 	
+	private static int port = 3011;
+	
     /**
      * This method is called when the bot is started either from IDE or from command line.
      * @param args
@@ -59,9 +61,8 @@ public class AgentRunner {
 		skill =  Integer.parseInt(args[2]);
 		numberOfBotsInTeam = Integer.parseInt(args[3]);
 		server = args[4];
+    	tcServer = UT2004TCServer.startTCServer(server, port);
 
-    	tcServer = UT2004TCServer.startTCServer();
-		
 		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost(server).setPort(3000).setLogLevel(Level.WARNING).startAgents(           
                 new CTFChampionBotParams().setSkillLevel(skill).setTeam(team),
                 new CTFChampionBotParams().setSkillLevel(skill).setTeam(team),

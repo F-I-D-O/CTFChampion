@@ -19,6 +19,7 @@ package com.fido.ctfbot.modules;
 import com.fido.ctfbot.activities.Activity;
 import com.fido.ctfbot.activities.Fight;
 import com.fido.ctfbot.CTFChampion;
+import com.fido.ctfbot.RequestType;
 import com.fido.ctfbot.activities.Harvest;
 import com.fido.ctfbot.activities.ICaller;
 import com.fido.ctfbot.informations.InformationBase;
@@ -38,6 +39,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.Players;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.bot.command.AdvancedLocomotion;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.utils.Cooldown;
 import java.util.logging.Level;
 
@@ -74,6 +76,8 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	private int numberOfActivitiesEndedThisTurn = 0;
 	
 	public final Cooldown tryToHarvestWhileGuardingCoolDown = new Cooldown(10000);
+	
+	public final Cooldown attackRequestCooldown = new Cooldown(3000);
 	
 	
 	
@@ -118,6 +122,9 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 			case HARVEST_NEAR_OUR_BASE:
                 harvestNearOurBase();
                 break;	
+			case PREPARE_FOR_ATTACK:
+                prepareForAttack();
+                break;	
 			default:
 				log.log(Level.WARNING, "Not implemented goal [takeOver()]");	
 		}
@@ -145,13 +152,12 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 		
 		// flag is home
 		else if(ctf.isEnemyFlagHome()){
-			log.log(Level.INFO, "enemy flag is home - going to enemy base [getEnemyFlag()]");
-			runActivity(new Move(informationBase, log, this, ctf.getEnemyBase().getLocation()));
+			armAndAttack();
 		}
 		else{
 			UnrealId flagHolderId = enemyFlag.getHolder();
 			
-			// bot has the glag
+			// bot has the flag
 			if (bot.getInfo().getId().equals(flagHolderId)) {
 				log.log(Level.INFO, "bot allready have the flag - going back home [getEnemyFlag()]");
 				runActivity(new QuickMove(informationBase, log, this, ctf.getOurBase().getLocation()));
@@ -166,8 +172,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				
 				// bot can't see the flag
 				if (enemyFlagLocation == null) {
-					log.log(Level.INFO, "We don't know the enemy flag location - going to enemy base [getEnemyFlag()]");
-					runActivity(new Move(informationBase, log, this, ctf.getEnemyBase().getLocation()));
+					armAndAttack();
 				} 
 				// bot see the flag
 				else {
@@ -182,16 +187,15 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	private void guardBase() {
 		// is our flag home ?
 		if(ctf.isOurFlagHome()){
-			// am I in our base ?
-			if(informationBase.AmIInOurBase()){
-				// I see an enemy in our base!
-//				if(players.canSeeEnemies()){
-//					log.log(Level.INFO, "Enemy in our base - going to kill him [guardBase()]");
-//					runActivity(new Fight(informationBase, log, this));
-//				}
-//				else{
+			if(ctf.isBotCarryingEnemyFlag()){
+				log.log(Level.INFO, "bot holds enemy flag - going home quickly! [getBackOurFlag()]");
+				runActivity(new QuickMove(informationBase, log, this, ctf.getOurBase().getLocation()));
+			}
+			else{
+				// am I in our base ?
+				if(informationBase.AmIInOurBase()){
 					EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
-					
+
 					// if no enemy in our base
 					if(enemyInfo == null){
 						// there are things to harvest - going harvest
@@ -207,15 +211,16 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 									InformationBase.BASE_SIZE));
 						}
 					}
+					// I enemy in our base!
 					else{
 						log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [guardBase()]");
 						runActivity(new Fight(informationBase, log, this, enemyInfo));
 					}
-//				}
-			}
-			else{
-				log.log(Level.INFO, "We are not in our base, going to our base [guardBase()]");
-				runActivity(new Move(informationBase, log, this, ctf.getOurBase().getLocation()));
+				}
+				else{
+					log.log(Level.INFO, "We are not in our base, going to our base [guardBase()]");
+					runActivity(new Move(informationBase, log, this, ctf.getOurBase().getLocation()));
+				}
 			}
 		}
 		else{
@@ -235,11 +240,12 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 			if(currentActivity != null){
 				currentActivity.end();
 			}
-			bot.setName(activity.getName());
+			
 			activity.start();
 			
 			currentActivity = activity;
 		}
+		bot.setName(activity.getName());
 		
 		log.log(Level.INFO, "now the current activity will be runned {0} [runActivity()]", currentActivity.getName());
 		currentActivity.run();
@@ -261,25 +267,43 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 				
 				 // bot carrying enemy flag - continue going home
 				if(ctf.isBotCarryingEnemyFlag()){
-					log.log(Level.INFO, "bot hols enemy flag - going home [getBackOurFlag()]");
-					runActivity(new QuickMove(informationBase, log, this, ctf.getOurBase().getLocation()));
+					log.log(Level.INFO, "bot holds enemy flag - going home [getBackOurFlag()]");
+//					runActivity(new QuickMove(informationBase, log, this, ctf.getOurBase().getLocation()));
+					runActivity(new PriorityHarvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
+							bot.getNavigationUtils().getHalfMapDistance(), InformationBase.BASE_SIZE));
 				}
 				// fight the thief
 				else{
-					log.log(Level.INFO, "our flag is hold by enemy - killing him [getBackOurFlag()]");
-					runActivity(new Fight(informationBase, log, this, 
-							informationBase.getEnemies().get(ctf.getOurFlag().getHolder())));
+					UnrealId enemyId = ctf.getOurFlag().getHolder();
+					if(enemyId == null){
+						log.log(Level.SEVERE, "Our flag state unknown - is it even posible? [getBackOurFlag()]");
+					}
+					else{
+						log.log(Level.INFO, "our flag is hold by enemy - killing him [getBackOurFlag()]");
+						EnemyInfo enemyInfo = informationBase.getEnemies().get(enemyId);
+						if(enemyInfo ==  null){
+							log.log(Level.SEVERE, "Enemy info not initilaized yet - is it even posible? [getBackOurFlag()]");
+						}
+						else{
+							runActivity(new Fight(informationBase, log, this, enemyInfo));
+						}
+					}
 				}
 			}
 		}
         
         // bot carrying enemy flag - continue going home
         if(ctf.isBotCarryingEnemyFlag()){
-			log.log(Level.INFO, "bot hols enemy flag - going home [getBackOurFlag()]");
+			log.log(Level.INFO, "bot holds enemy flag - going home [getBackOurFlag()]");
 //            runActivity(new QuickMove(informationBase, log, this, ctf.getOurBase().getLocation()));
 			runActivity(new PriorityHarvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
-							Harvest.HARVEST_NEAR_BASE_DISTANCE_LIMIT, InformationBase.BASE_SIZE));
+							bot.getNavigationUtils().getHalfMapDistance(), InformationBase.BASE_SIZE));
         }
+		// we see enemy flag on the ground
+		else if(ctf.getEnemyFlag() != null && ctf.isEnemyFlagDropped() && ctf.getEnemyFlag().isVisible()){
+			log.log(Level.INFO, "we see enemy flag - going for the flag [getBackOurFlag()]");
+			runActivity(new QuickMove(informationBase, log, this, ctf.getEnemyFlag().getLocation()));
+		}
         else{
             
 			// bot knows where the flag was recently, go to that place
@@ -291,8 +315,18 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 			}
 			// go to enemy base and wait for him!
 			else{
-				log.log(Level.INFO, "we don't know where the flag is - going to enemy base [getBackOurFlag()]");
-				runActivity(new Move(informationBase, log, this, ctf.getEnemyBase().getLocation()));
+				// bot knows where the flag was recently, go to that place
+				if(!enemyFlagInfo.lastKnownLocationTimeExpired() && 
+						bot.getNavigationUtils().getDistance(enemyFlagInfo.getLastKnownLocation(), info.getLocation()) < 
+							EnemyFlagInfo.ENEMY_FLAG_MAX_DISTANCE_TO_LAST_KNOW_LOCATION){
+					log.log(Level.INFO, "we know recent location of enemy flag - going to that location [getBackOurFlag()]");
+					runActivity(new QuickMove(informationBase, log, this, enemyFlagInfo.getLastKnownLocation()));
+				}
+				else{
+					
+					log.log(Level.INFO, "we don't know where the flag is - going to enemy base [getBackOurFlag()]");
+					runActivity(new Move(informationBase, log, this, ctf.getEnemyBase().getLocation()));
+				}
 			}
         }
     }
@@ -324,12 +358,11 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 	private void harvestNearOurBase() {
 		// is our flag home ?
 		if(ctf.isOurFlagHome()){
-			// I see an enemy!
-//			if(players.canSeeEnemies()){
-//				log.log(Level.INFO, "Enemy - going to kill him [harvestNearOurBase()]");
-//				runActivity(new Fight(informationBase, log, this));
-//			}
-//			else{
+			if(ctf.isBotCarryingEnemyFlag()){
+				log.log(Level.INFO, "bot holds enemy flag - going home quickly! [getBackOurFlag()]");
+				runActivity(new QuickMove(informationBase, log, this, ctf.getOurBase().getLocation()));
+			}
+			else{
 				EnemyInfo enemyInfo = informationBase.getEnemyInOurBase();
 				if(enemyInfo == null){
 					log.log(Level.INFO, "Base clean - going to pick up some items [harvestNearOurBase()]");
@@ -337,13 +370,69 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 							Harvest.HARVEST_NEAR_BASE_DISTANCE_LIMIT, InformationBase.BASE_SIZE));
 				}
 				else{
+					// enemy in our base
 					log.log(Level.INFO, "Enemy in our base - don't see him, but going to kill him [harvestNearOurBase()]");
 					runActivity(new Fight(informationBase, log, this, enemyInfo));
 				}
-//			}
+			}
 		}
 		else{
 			getBackOurFlag();
+		}
+	}
+
+	private void prepareForAttack() {
+		// bot see our flag
+		if(ctf.getOurFlag().isVisible()){
+			
+			// flag is dropped - grab the flag!
+			if(ctf.isOurFlagDropped()){
+				log.log(Level.INFO, "our flag is dropped - go to drop spot [harvestNearEnemyBase()]");
+				runActivity(new QuickMove(informationBase, log, this, ctf.getOurFlag().getLocation()));
+			}
+			// fight the thief
+			else{
+				UnrealId enemyId = ctf.getOurFlag().getHolder();
+				if(enemyId == null){
+					log.log(Level.SEVERE, "Our flag state unknown - is it even posible? [harvestNearEnemyBase()]");
+				}
+				else{
+					log.log(Level.INFO, "our flag is hold by enemy - killing him [harvestNearEnemyBase()]");
+					EnemyInfo enemyInfo = informationBase.getEnemies().get(enemyId);
+					if(enemyInfo ==  null){
+						log.log(Level.SEVERE, "Enemy info not initilaized yet - is it even posible? [harvestNearEnemyBase()]");
+					}
+					else{
+						runActivity(new Fight(informationBase, log, this, enemyInfo));
+					}
+				}
+			}
+		}
+		else{
+			if((informationBase.getSelfInfo().isReadyForAttack() || informationBase.amIReadyForAttack()) 
+					&& attackRequestCooldown.isCool()){
+				log.log(Level.INFO, "Bot is armed - sending attack request [harvestNearEnemyBase()]");
+				bot.getComunicationModule().sendRequest(RequestType.ATTACK);
+				attackRequestCooldown.use();
+				informationBase.getSelfInfo().setReadyForAttack(true);
+			}
+			log.log(Level.INFO, "Arming myself: [harvestNearEnemyBase()]");
+			runActivity(new Harvest(informationBase, log, this, ctf.getOurBase().getLocation(), 
+							bot.getNavigationUtils().getHalfMapDistance()));
+		}
+		
+	}
+
+	private void armAndAttack() {
+		if(informationBase.getSelfInfo().isReadyForAttack() || informationBase.amIReadyForAttack()){
+			informationBase.getSelfInfo().setReadyForAttack(true);
+			log.log(Level.INFO, "We don't know the enemy flag location - going to enemy base [getEnemyFlag()]");
+				runActivity(new Move(informationBase, log, this, ctf.getEnemyBase().getLocation()));
+		}
+		else{
+			log.log(Level.INFO, "Arming myself: [harvestNearEnemyBase()]");
+			runActivity(new Harvest(informationBase, log, this, ctf.getEnemyBase().getLocation(), 
+							bot.getNavigationUtils().getHalfMapDistance(), InformationBase.BASE_SIZE));
 		}
 	}
 

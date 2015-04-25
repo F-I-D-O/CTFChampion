@@ -1,6 +1,7 @@
 package com.fido.ctfbot;
 
 
+import com.fido.ctfbot.actions.SimpleAction;
 import com.fido.ctfbot.informations.InfoType;
 import com.fido.ctfbot.modules.NavigationUtils;
 import com.fido.ctfbot.informations.InformationBase;
@@ -22,12 +23,10 @@ import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.Eve
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.ObjectClassEventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
 import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
-import cz.cuni.amis.pogamut.base.utils.logging.LogCategory;
 import cz.cuni.amis.pogamut.base3d.worldview.object.event.WorldObjectAppearedEvent;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.IUT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004Navigation;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004Bot;
-import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbcommands.Initialize;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.BotDamaged;
@@ -39,6 +38,7 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.ItemPickedUp;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.PlayerJoinsGame;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.PlayerKilled;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Self;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004BotTCController;
 import cz.cuni.amis.utils.Cooldown;
@@ -115,13 +115,9 @@ public class CTFChampion extends UT2004BotTCController {
 	
     private long   logicIterationNumber = 0;    
 	
-	private final Cooldown sendEnemyPositionMessageCooldown = new Cooldown(1000);
-	
-	private final Cooldown sendFlagPositionMessageCooldown = new Cooldown(500);
-	
 	private boolean bioRifleCharged = false;
 	
-	
+	private boolean callMapInfoObtained = false;
 	
 	
 	/*
@@ -139,6 +135,7 @@ public class CTFChampion extends UT2004BotTCController {
 	private NavigationUtils navigationUtils;
     
     private DebugTools debugTools;
+	
 	
 	
 	
@@ -282,19 +279,28 @@ public class CTFChampion extends UT2004BotTCController {
 		event.getType();
 	}
 	
-	@EventListener(eventClass = WorldObjectAppearedEvent.class)
-	private void OnItemAppeared(WorldObjectAppearedEvent event){
-		if(event.getObject() instanceof Item){
-			Item item = (Item) event.getObject();
-			informationBase.getRecentSpotedItems().addItem(item);
-			log.log(Level.INFO, "Item {0} appeard", item.getType()); 
-		}
+	@ObjectClassEventListener(eventClass = WorldObjectAppearedEvent.class, objectClass = Item.class)
+	private void OnItemAppeared(WorldObjectAppearedEvent<Item> event){
+		Item item = event.getObject();
+		informationBase.getRecentSpotedItems().addItem(item);
+		log.log(Level.INFO, "Item {0} appeard", item.getType()); 
 	}
 	
 	@EventListener(eventClass = PlayerJoinsGame.class)
 	private void OnPlayerJoinsGame(PlayerJoinsGame event){
 		informationBase.addPlayer(event.getId());
 		log.log(Level.INFO, "Player {0} joined game", event.getName()); 
+	}
+	
+	@EventListener(eventClass = PlayerKilled.class)
+	private void OnPlayerKilled(PlayerKilled event){
+		if(isLeader()){
+			FriendInfo friendInfo = informationBase.getFriends().get(event.getId());
+			if(friendInfo != null){
+				log.log(Level.INFO, "Team member {0} killed", friendInfo.getName()); 
+				friendInfo.setReadyForAttack(false);
+			}
+		}
 	}
 	
 	@EventListener(eventClass = WorldObjectUpdatedEvent.class)
@@ -313,29 +319,28 @@ public class CTFChampion extends UT2004BotTCController {
 	}
 	
 	@ObjectClassEventListener(eventClass = WorldObjectUpdatedEvent.class, objectClass = Player.class)
-    protected void playerUpdated(WorldObjectUpdatedEvent<Player> event) {
-        Player player = event.getObject();
-		
-        // First player objects are received in HandShake - at that time we don't have Self message yet or players location!!
-        if (player.getLocation() == null || info.getLocation() == null) {
-            return;
-        }
-		
+    protected void onPlayerUpdated(WorldObjectUpdatedEvent<Player> event) {
+		Player player = event.getObject();
+
+		// First player objects are received in HandShake - at that time we don't have Self message yet or players location!!
+		if (player.getLocation() == null || info.getLocation() == null) {
+			return;
+		}
+
 		// we only have to update enemy, because friends reports about themaselfes
 		EnemyInfo enemyInfo = informationBase.getEnemies().get(player.getId());
-		if(enemyInfo != null){
+
+		if(enemyInfo != null && enemyInfo.getSendPositionMessageCooldown().isCool()){
 			enemyInfo.setLastKnownLocation(player.getLocation());
 			enemyInfo.setLastKnownLocationTime(info.getTime());
-			if(sendEnemyPositionMessageCooldown.isCool()){
-				comunicationModule.sendEnemyMessage(player);
-				sendEnemyPositionMessageCooldown.use();
-			}
+			comunicationModule.sendEnemyMessage(player);
+			enemyInfo.getSendPositionMessageCooldown().use();	
 		}
     }
 	
 	@ObjectClassEventListener(eventClass = WorldObjectUpdatedEvent.class, 
 			objectClass = cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo.class)
-    protected void flagInfoUpdated(
+    protected void onFlagInfoUpdated(
 			WorldObjectUpdatedEvent<cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo> event) {
         cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.FlagInfo flag = event.getObject();
 		
@@ -344,22 +349,25 @@ public class CTFChampion extends UT2004BotTCController {
             return;
         }
 		
-		// we only have to update enemy, because friends reports about themaselfes
 		FlagInfo flagInfo;
 		InfoType infoType;
+		boolean flagHome;
 		if(informationBase.getOurFlagInfo().getFlag().getId().equals(flag.getId())){
 			flagInfo =  informationBase.getOurFlagInfo();
 			infoType = InfoType.OUR_FLAG;
+			flagHome = ctf.isOurFlagHome();
 		}
 		else{
 			flagInfo = informationBase.getEnemyFlagInfo();
 			infoType = InfoType.ENEMY_FLAG;
+			flagHome = ctf.isEnemyFlagHome();
 		}
-		flagInfo.setLastKnownLocation(flag.getLocation());
-		flagInfo.setLastKnownLocationTime(info.getTime());
-		if(sendFlagPositionMessageCooldown.isCool()){
+		
+		if(flagInfo.getSendPositionMessageCooldown().isCool() && !flagHome){
+			flagInfo.setLastKnownLocation(flag.getLocation());
+			flagInfo.setLastKnownLocationTime(info.getTime());
 			comunicationModule.sendFlagMessage(flag, infoType);
-			sendEnemyPositionMessageCooldown.use();
+			flagInfo.getSendPositionMessageCooldown().use();
 		}
     }
 	
@@ -383,8 +391,11 @@ public class CTFChampion extends UT2004BotTCController {
      */
     @Override
     public void botKilled(BotKilled event) {
-        // Uncomment this line to have the bot comment on its death.
-        //sayGlobal("I was KILLED!");
+        if(!isLeader()){
+			actionPlanner.addSimpleAction(SimpleAction.REQUEST_GOAL_RESEND);
+		}
+		setBioRifleCharged(false);
+		informationBase.getSelfInfo().setReadyForAttack(false);
     }
     
     /**
@@ -396,7 +407,7 @@ public class CTFChampion extends UT2004BotTCController {
 		System.out.println("prepareBot start"); 
 		mainNavigation = nmNav;
 		
-		initNavigationSetting();
+//		initNavigationSetting();
 		
 		ititWeaponPreferences();
 		
@@ -474,6 +485,8 @@ public class CTFChampion extends UT2004BotTCController {
 		informationBase.addSelf();
 		
 		startName = info.getName();
+		
+		navigationUtils.initHalfMapSize();
 		
 		log.info("botFirstSpawn end"); 
     }
@@ -614,15 +627,24 @@ public class CTFChampion extends UT2004BotTCController {
 		// melee - under 80cm
         weaponPrefs.newPrefsRange(80).add(UT2004ItemType.SHIELD_GUN, true);
         // Only one weapon is added to this close combat range and it is SHIELD GUN		
-			
-        // short range - under 10 meters
-        weaponPrefs.newPrefsRange(1000)
+		
+		// short range - under 6 meters
+		weaponPrefs.newPrefsRange(600)
 				.add(UT2004ItemType.FLAK_CANNON, true)
 				.add(UT2004ItemType.SHOCK_RIFLE, true)
 				.add(UT2004ItemType.MINIGUN, true)
                 .add(UT2004ItemType.LINK_GUN, false)
-				.add(UT2004ItemType.BIO_RIFLE, true)  
-				.add(UT2004ItemType.ASSAULT_RIFLE, true);        
+				.add(UT2004ItemType.BIO_RIFLE, true)
+				.add(UT2004ItemType.ASSAULT_RIFLE, true);
+			
+        // short range - under 10 meters
+        weaponPrefs.newPrefsRange(1000)
+				.add(UT2004ItemType.FLAK_CANNON, true)
+				.add(UT2004ItemType.ROCKET_LAUNCHER, true)
+				.add(UT2004ItemType.SHOCK_RIFLE, true)
+				.add(UT2004ItemType.MINIGUN, true)
+                .add(UT2004ItemType.LINK_GUN, false)
+				.add(UT2004ItemType.ASSAULT_RIFLE, true);   
 				
         // Under 40 meters  - long range guns
         weaponPrefs.newPrefsRange(4000)
@@ -652,10 +674,10 @@ public class CTFChampion extends UT2004BotTCController {
 		
 		comunicationModule = new ComunicationModule(this, log, tcClient, informationBase);
 		
-		actionPlanner = new ActionPlanner(this);
 		activityPlanner = new ActivityPlanner(this, log, move, ctf, info, navigation, informationBase);
 		
-		actionPlanner.init(activityPlanner);
+		actionPlanner = new ActionPlanner(activityPlanner, this, log, informationBase);
+		
 		activityPlanner.init(actionPlanner);
 	}
 	
@@ -697,12 +719,57 @@ public class CTFChampion extends UT2004BotTCController {
 	}
 
 	private void initNavigationSetting() {
-//		navMeshModule.setReloadNavMesh(true);
+		if(isLeader()){
+			navMeshModule.setReloadNavMesh(true);
+			callMapInfoObtained = true;
+		}
 	}
 
 	@Override
 	public void mapInfoObtained() {
-//		navBuilder.removeEdgesBetween("CTF-Citadel.PathNode99", "CTF-Citadel.JumpSpot27");
+		if(callMapInfoObtained){
+			if (navBuilder.isMapName("DM-1on1-Albatross")) {
+				navBuilder.removeEdge("JumpSpot8", "PathNode88");
+				navBuilder.removeEdgesBetween("CTF-Citadel.PathNode99", "CTF-Citadel.JumpSpot27");
+			}
+			if (navBuilder.isMapName("CTF-BP2-Concentrate")) {
+				navBuilder.removeEdge("PathNode39", "JumpSpot3");
+				navBuilder.removeEdge("PathNode75", "JumpSpot2");
+
+				navBuilder.removeEdge("PathNode74", "JumpSpot2");
+				navBuilder.removeEdge("PathNode81", "JumpSpot2");
+				navBuilder.removeEdge("PathNode2", "PathNode76");
+				navBuilder.removeEdge("InventorySpot1", "AIMarker6");
+				navBuilder.removeEdge("InventorySpot55", "PathNode44");
+				navBuilder.removeEdge("PathNode0", "JumpSpot3");
+				navBuilder.removeEdgesBetween("PathNode44", "JumpSpot3");
+				navBuilder.removeEdge("InventorySpot9", "PathNode43");
+
+				navBuilder.removeEdge("PathNode0", "PathNode39");
+				navBuilder.removeEdge("PathNode0", "JumpSpot0");
+				navBuilder.removeEdge("PathNode0", "xBlueFlagBase0");
+
+				navBuilder.removeEdge("PathNode44", "PathNode39");
+				navBuilder.removeEdge("PathNode44", "JumpSpot0");
+				navBuilder.removeEdge("PathNode44", "xBlueFlagBase0");
+
+				navBuilder.removeEdge("PathNode74", "PathNode75");
+				navBuilder.removeEdge("PathNode74", "JumpSpot1");
+				navBuilder.removeEdge("PathNode74", "xRedFlagBase1");
+
+				navBuilder.removeEdge("PathNode81", "PathNode75");
+				navBuilder.removeEdge("PathNode81", "JumpSpot1");
+				navBuilder.removeEdge("PathNode81", "xRedFlagBase1");
+
+				navBuilder.removeEdge("PathNode68", "JumpSpot12");
+				navBuilder.removeEdge("PathNode69", "JumpSpot10");
+				navBuilder.removeEdge("PathNode76", "JumpSpot11");
+				navBuilder.removeEdge("PathNode44", "JumpSpot11");
+
+				navBuilder.removeEdge("InventorySpot2", "AIMarker6");
+				navBuilder.removeEdge("JumpSpot3", "xBlueFlagBase0");
+			}
+		}
 	}
 	
 	public CTFChampionBotParams getParams() {
