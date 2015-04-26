@@ -102,7 +102,7 @@ public class TakePosition extends HighLevelActivity {
 				}
 				// we are not at the point near whitch we wat to hide - going to the point.
 				else{
-					log.log(Level.INFO, "Going to the point of interest: {0} [TakePosition.run()]", nearTo);
+//					log.log(Level.INFO, "Going to the point of interest: {0} [TakePosition.run()]", nearTo);
 					runChildActivity(new Move(informationBase, log, this, nearTo));
 				}
 			}
@@ -114,13 +114,13 @@ public class TakePosition extends HighLevelActivity {
 		else {
 			// now we are in hiding spot - going to watch the area
 			if(info.atLocation(position)){
-				log.log(Level.INFO, "Watching area: {0} from {1} [TakePosition.run()]", 
-						new String[]{nearTo.toString(), position.toString()});
+//				log.log(Level.INFO, "Watching area: {0} from {1} [TakePosition.run()]", 
+//						new String[]{nearTo.toString(), position.toString()});
 				watchArea();
 			}
 			// know the hiding spotn - going htere
 			else{
-				log.log(Level.INFO, "Going to the point hiding spot: {0} [TakePosition.run()]", nearTo);
+//				log.log(Level.INFO, "Going to the point hiding spot: {0} [TakePosition.run()]", nearTo);
 				runChildActivity(new Move(informationBase, log, this, position.getLocation()));
 			}
 		}
@@ -139,12 +139,12 @@ public class TakePosition extends HighLevelActivity {
 	}
 
 	private void calculatePosition() {
-		log.log(Level.INFO, "Calculating position for hide: {0} [TakePosition.calculatePosition()]", nearTo);
+//		log.log(Level.INFO, "Calculating position for hide: {0} [TakePosition.calculatePosition()]", nearTo);
 		
 		if(maxNumberOfEdges < 5){
 			if(rotationIteartor < 8){
 				if(bot.getLogicIterationNumber() % 4 == 0){
-					log.log(Level.INFO, "Searching for hideouts: {0} [TakePosition.calculatePosition()]", nearTo);
+//					log.log(Level.INFO, "Searching for hideouts: {0} [TakePosition.calculatePosition()]", nearTo);
 					position = fwMap.getNearestFilteredNavPoint(navPoints.getNavPoints().values(), info.getNearestNavPoint(), 
 							new IFilter<NavPoint>() {
 						int numberOfEdges;		
@@ -152,8 +152,8 @@ public class TakePosition extends HighLevelActivity {
 						@Override
 						public boolean isAccepted(NavPoint navpoint) {
 							if(navpoint.isVisible()){
-								log.log(Level.INFO, "Checking visible navpoint: {0}[TakePosition.calculatePosition()]", 
-										navpoint.getLocation());
+//								log.log(Level.INFO, "Checking visible navpoint: {0}[TakePosition.calculatePosition()]", 
+//										navpoint.getLocation());
 								
 								return  // distance test
 										(maxDistance == 0 || 

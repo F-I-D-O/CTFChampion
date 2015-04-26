@@ -120,11 +120,11 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 		
 		// navigovate only if we don't navigating, or we navigating to different target
 		if(!navigation.isNavigating() || !navigation.getCurrentTarget().getLocation().equals(currentTarget)){
-			log.log(Level.INFO, "It's necessary to change the target [Move.run()]");
-            bot.getDebugTools().drawIntention(currentTarget);
+//			log.log(Level.INFO, "It's necessary to change the target [Move.run()]");
+//            bot.getDebugTools().drawIntention(currentTarget);
 			navigation.navigate(currentTarget);
 			currentTargetReached = false;
-			log.log(Level.INFO, "Target changed [Move.run()]");
+//			log.log(Level.INFO, "Target changed [Move.run()]");
 		}       
 		
 		if(players.canSeeEnemies()){
@@ -159,7 +159,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 	}
 
 	protected void tryToRecountPathAcrossItems() {
-		log.log(Level.INFO, "Recalculating path across usefull items - start [Move.tryToRecountPathAcrossItems()]");
+//		log.log(Level.INFO, "Recalculating path across usefull items - start [Move.tryToRecountPathAcrossItems()]");
 		ArrayList<Item> spotedItemsSorted = recentSpotedItems.getAllSorted();
 		
 		for(Item item : spotedItemsSorted){
@@ -190,7 +190,7 @@ public class Move extends Activity implements FlagListener<NavigationState> {
 			}
 			recentSpotedItems.remove(item);
 		}
-		log.log(Level.INFO, "Realculating path across usefull items - end [Move.tryToRecountPathAcrossItems()]");
+//		log.log(Level.INFO, "Realculating path across usefull items - end [Move.tryToRecountPathAcrossItems()]");
 	}
 
 	@Override

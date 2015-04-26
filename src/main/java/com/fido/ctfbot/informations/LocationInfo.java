@@ -76,7 +76,7 @@ public abstract class LocationInfo extends Info {
 				return null;
 			}
 			if(lastKnownLocationTimeExpired() || informationBase.getInfo().atLocation(lastKnownLocation)){
-				log.log(Level.INFO, "Location expired: {0}.", lastKnownLocation);
+//				log.log(Level.INFO, "Location expired: {0}.", lastKnownLocation);
 				return null;
 			}
 			else{

@@ -79,7 +79,7 @@ public class ComunicationModule extends CTFChampionModule {
 			return;
 		}
 		
-		log.log(Level.INFO, "Sending bot location message: [sendMyLocationMessage()]");
+//		log.log(Level.INFO, "Sending bot location message: [sendMyLocationMessage()]");
 		teamComClient.sendToTeamOthers(new LocationMessage(informationBase.getInfo().getLocation(), 
 				informationBase.getInfo().getId(), InfoType.FRIEND));
 	}
@@ -89,7 +89,7 @@ public class ComunicationModule extends CTFChampionModule {
 			return;
 		}
         
-        log.log(Level.INFO, "Sending pick up message: [sendPickup()]");
+//        log.log(Level.INFO, "Sending pick up message: [sendPickup()]");
 		teamComClient.sendToTeamOthers(new PickupMessage(id, itemType, location));
     }
 
@@ -97,7 +97,7 @@ public class ComunicationModule extends CTFChampionModule {
 		if(!isTeamComReady()){
 			return;
 		}
-		log.log(Level.INFO, "Sending enemy message: [sendEnemyMessage()]");
+//		log.log(Level.INFO, "Sending enemy message: [sendEnemyMessage()]");
 		teamComClient.sendToTeamOthers(new LocationMessage(player.getLocation(), player.getId(), InfoType.ENEMY));
 	}
 
@@ -106,7 +106,7 @@ public class ComunicationModule extends CTFChampionModule {
 			return;
 		}
 		
-		log.log(Level.INFO, "Sending request message: [sendRequest()]");
+//		log.log(Level.INFO, "Sending request message: [sendRequest()]");
 		teamComClient.sendToTeamOthers(new RequestMessage(requestType, informationBase.getInfo().getId()));
 	}
 
@@ -115,7 +115,7 @@ public class ComunicationModule extends CTFChampionModule {
 			return;
 		}
 		
-		log.log(Level.INFO, "Sending flag message: [sendFlagMessage()]");
+//		log.log(Level.INFO, "Sending flag message: [sendFlagMessage()]");
 		teamComClient.sendToTeamOthers(new LocationMessage(flag.getLocation(), flag.getId(), infoType));
 	}
 }

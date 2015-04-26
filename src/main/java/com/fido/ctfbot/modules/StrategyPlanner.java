@@ -269,7 +269,13 @@ public class StrategyPlanner extends CTFChampionModule{
 	private boolean processResendGoalRequest(RequestMessage playerRequest) {
 		log.log(Level.INFO, "Procesing resend goal request: {0} [processRequest()]", playerRequest);
 		FriendInfo friendInfo = informationBase.getFriends().get(playerRequest.getPlayerId());
-		return comunicationModule.sendCommand(friendInfo, friendInfo.getGoal());
+		if(friendInfo != null){
+			return comunicationModule.sendCommand(friendInfo, friendInfo.getGoal());
+		}
+		else{
+			log.log(Level.WARNING, "Friend info not initialiyed yet.[processRequest()]");
+			return false;
+		}
 	}
 
 	private boolean prepareForAttackOnEnemyBase() {

@@ -111,12 +111,12 @@ public class Fight extends Activity {
 				}
 				else{
 					shoot.shoot(weaponPrefs, chosenEmemy);
-					log.log(Level.INFO, "Chosen enemy is visible, shooting with: {0} [FightEnemy.run()]", shoot.getLastShooting());
+//					log.log(Level.INFO, "Chosen enemy is visible, shooting with: {0} [FightEnemy.run()]", shoot.getLastShooting());
 //					doExpertMove(chosenEmemy);
 				}
 			}
 			else{
-				log.log(Level.INFO, "Chosen enemy is not visible. [FightEnemy.run()]");
+//				log.log(Level.INFO, "Chosen enemy is not visible. [FightEnemy.run()]");
 				if(!bot.isBioRifleCharged()){
 					shoot.stopShooting();
 				}

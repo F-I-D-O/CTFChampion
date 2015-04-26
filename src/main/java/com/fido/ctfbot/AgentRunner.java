@@ -29,6 +29,8 @@ import java.util.logging.Level;
  */
 public class AgentRunner {
 	
+	public static final String TEAM_NAME = "TeamCTF";
+	
 	/**
 	 * server for team communication
 	 */
@@ -63,7 +65,7 @@ public class AgentRunner {
 		server = args[4];
     	tcServer = UT2004TCServer.startTCServer(server, port);
 
-		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, "TeamCTF").setMain(true).setHost(server).setPort(3000).setLogLevel(Level.WARNING).startAgents(           
+		new UT2004BotRunner<UT2004Bot, UT2004BotParameters>(CTFChampion.class, TEAM_NAME).setMain(true).setHost(server).setPort(3000).setLogLevel(Level.WARNING).startAgents(           
                 new CTFChampionBotParams().setSkillLevel(skill).setTeam(team),
                 new CTFChampionBotParams().setSkillLevel(skill).setTeam(team),
 				new CTFChampionBotParams().setSkillLevel(skill).setTeam(team)

@@ -159,6 +159,11 @@ public class ItemTypeInfo extends Info implements Comparable<ItemTypeInfo> {
 			currentAmount =info.getHealth();
 			maxAmount = itemType == UT2004ItemType.HEALTH_PACK ? game.getFullHealth() : game.getMaxHealth();
 		}
+		else if(itemType == UT2004ItemType.U_DAMAGE_PACK){
+			if(info.hasUDamage()){
+				currentAmount = 1;
+			}
+		}
 		else{
 			log.log(Level.INFO, "Item with not implemented category {0}  - zero amount priority [countAmountPriority()]", 
 					itemType.getCategory());

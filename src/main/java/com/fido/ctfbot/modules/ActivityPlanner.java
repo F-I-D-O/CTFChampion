@@ -247,7 +247,7 @@ public class ActivityPlanner extends CTFChampionModule implements ICaller{
 		}
 		bot.setName(activity.getName());
 		
-		log.log(Level.INFO, "now the current activity will be runned {0} [runActivity()]", currentActivity.getName());
+//		log.log(Level.INFO, "now the current activity will be runned {0} [runActivity()]", currentActivity.getName());
 		currentActivity.run();
 		
 		log.log(Level.INFO, "runActivity end [runActivity()]", activity.getName());

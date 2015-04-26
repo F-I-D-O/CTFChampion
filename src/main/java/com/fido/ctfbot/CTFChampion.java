@@ -228,9 +228,9 @@ public class CTFChampion extends UT2004BotTCController {
 	
 	@EventListener(eventClass = LocationMessage.class)
     public void onLocationAcquired(LocationMessage locationMessage){
-       log.log(Level.INFO, "Location acquired: type: {0}, unrealId: {1} loaction: {2}", 
-			new String[]{locationMessage.getInfoType().toString(), locationMessage.getUnrealId().toString(),
-				locationMessage.getLocation().toString()}); 
+//       log.log(Level.INFO, "Location acquired: type: {0}, unrealId: {1} loaction: {2}", 
+//			new String[]{locationMessage.getInfoType().toString(), locationMessage.getUnrealId().toString(),
+//				locationMessage.getLocation().toString()}); 
 	   
 		switch(locationMessage.getInfoType()){
 			case FRIEND:
@@ -253,7 +253,7 @@ public class CTFChampion extends UT2004BotTCController {
     
     @EventListener(eventClass = PickupMessage.class)
     public void onPickupMessageAcquired(PickupMessage pickupMessage){
-        log.log(Level.INFO, pickupMessage.getLogInfo()); 
+//        log.log(Level.INFO, pickupMessage.getLogInfo()); 
         ItemInfo itemInfo = informationBase.getItemInfo(pickupMessage.getId());
         if(itemInfo != null){
             itemInfo.restartRespawnTime();
@@ -273,7 +273,7 @@ public class CTFChampion extends UT2004BotTCController {
             comunicationModule.sendPickup(event.getId(), event.getType(), event.getLocation());
 		}
 		else{
-			log.log(Level.WARNING, "Item without ItemInfo picked up: {0}", event.getId()); 
+//			log.log(Level.WARNING, "Item without ItemInfo picked up: {0}", event.getId()); 
 		}
 		
 		event.getType();
@@ -283,7 +283,7 @@ public class CTFChampion extends UT2004BotTCController {
 	private void OnItemAppeared(WorldObjectAppearedEvent<Item> event){
 		Item item = event.getObject();
 		informationBase.getRecentSpotedItems().addItem(item);
-		log.log(Level.INFO, "Item {0} appeard", item.getType()); 
+//		log.log(Level.INFO, "Item {0} appeard", item.getType()); 
 	}
 	
 	@EventListener(eventClass = PlayerJoinsGame.class)
@@ -407,13 +407,15 @@ public class CTFChampion extends UT2004BotTCController {
 		System.out.println("prepareBot start"); 
 		mainNavigation = nmNav;
 		
+	
+		
 //		initNavigationSetting();
 		
 		ititWeaponPreferences();
 		
 		initializeModules();		
 		
-		debugTools.clear();
+//		debugTools.clear();
 	
         // By uncommenting following line, you can make the bot to do the file logging of all its components
         //bot.getLogger().addDefaultFileHandler(new File("EmptyBot.log"));
@@ -701,8 +703,7 @@ public class CTFChampion extends UT2004BotTCController {
 	private boolean checkAllBotsInGame() {
 		informationBase.processMissingPlayers();
 		// there we expecttwo teams and human player as observer.
-		if(informationBase.getFriends().size() + informationBase.getEnemies().size() >= 
-				InformationBase.TEAM_SIZE *2+ 1){
+		if(informationBase.getFriends().size()  >= InformationBase.TEAM_SIZE){
 			allBotsInGame = true;
 			return true;
 		}

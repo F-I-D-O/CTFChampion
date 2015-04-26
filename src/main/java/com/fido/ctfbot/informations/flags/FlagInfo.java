@@ -27,7 +27,7 @@ import cz.cuni.amis.utils.Cooldown;
  */
 public abstract class FlagInfo extends LocationInfo{
 	
-	private static final double FLAG_LOCATION_EXPIRE_TIME = 9;
+	private static final double FLAG_LOCATION_EXPIRE_TIME = 6;
 	
 	private static final long LOCATION_RESEND_TIME = 1000;
 	

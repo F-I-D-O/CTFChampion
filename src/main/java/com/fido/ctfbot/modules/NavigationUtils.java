@@ -101,24 +101,24 @@ public final class NavigationUtils extends CTFChampionModule {
 	}
 	
 	public void navigate(Location target){
-		log.log(Level.INFO, "Navigating to {0} [navigate()]", target);
+//		log.log(Level.INFO, "Navigating to {0} [navigate()]", target);
 		bot.getMainNavigation().navigate(target);
 	}
 
 	public boolean isNavPointOccupied(NavPoint navpoint) {
 		for (Player player : bot.getPlayers().getVisiblePlayers().values()) {
 			if(navpoint.getLocation().equals(player.getLocation())){
-				log.log(Level.INFO, "Navpoint at {0} is occupied - we see it [isNavPointOccupied()]", navpoint.getLocation());
+//				log.log(Level.INFO, "Navpoint at {0} is occupied - we see it [isNavPointOccupied()]", navpoint.getLocation());
 				return true;
 			}
 		}
 		for (FriendInfo friendInfo : informationBase.getFriends().values()) {
 			if(navpoint.getLocation().equals(friendInfo.getBestLocation())){
-				log.log(Level.INFO, "Navpoint at {0} is occupied - by friend [isNavPointOccupied()]", navpoint.getLocation());
+//				log.log(Level.INFO, "Navpoint at {0} is occupied - by friend [isNavPointOccupied()]", navpoint.getLocation());
 				return true;
 			}
 		}
-		log.log(Level.INFO, "Navpoint at {0} is free [isNavPointOccupied()]", navpoint.getLocation());
+//		log.log(Level.INFO, "Navpoint at {0} is free [isNavPointOccupied()]", navpoint.getLocation());
 		return false;
 	}
 

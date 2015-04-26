@@ -124,13 +124,13 @@ public class Harvest extends HighLevelActivity {
 			else{
 				chosenItem = harvestingPriorities.get(0);
                 
-				log.log(Level.INFO, "Item for harvest chosen: {0}, location: {1}[Harvest.run()]", 
-						new String[]{chosenItem.getItem().toString(), chosenItem.getItem().getLocation().toString()});
+////				log.log(Level.INFO, "Item for harvest chosen: {0}, location: {1}[Harvest.run()]", 
+//						new String[]{chosenItem.getItem().toString(), chosenItem.getItem().getLocation().toString()});
 				runChildActivity(new Move(informationBase, log, this, chosenItem.getItem().getLocation()));
 			}
 		}
 		else{
-			log.log(Level.INFO, "Item for harvesting already chosen: {0} [Harvest.run()]", chosenItem.getItem());
+//			log.log(Level.INFO, "Item for harvesting already chosen: {0} [Harvest.run()]", chosenItem.getItem());
 			currentChildActivity.run();
 		}
 	}
@@ -156,7 +156,7 @@ public class Harvest extends HighLevelActivity {
 	}
 	
 	protected void callculateHarvestingPriority() {
-		log.log(Level.INFO, "Calculating harvesting priorities - start [Harvest.callculateHarvestingPriority()]");
+//		log.log(Level.INFO, "Calculating harvesting priorities - start [Harvest.callculateHarvestingPriority()]");
         for (ItemTypeInfo itemTypeStatistic : informationBase.getItemTypesInfo().values()) {
             itemTypeStatistic.countOverallPriority();
         }
@@ -185,7 +185,7 @@ public class Harvest extends HighLevelActivity {
 		}
 		
         Collections.sort(harvestingPriorities, Collections.reverseOrder());
-		log.log(Level.INFO, "Calculating harvesting priorities - end [Harvest.callculateHarvestingPriority()]");
+//		log.log(Level.INFO, "Calculating harvesting priorities - end [Harvest.callculateHarvestingPriority()]");
 	}
 
 	private void debugRemovalCause(ItemInfo itemInfo) {
@@ -234,6 +234,7 @@ public class Harvest extends HighLevelActivity {
 							searchingAreaCenter, itemInfo.getItem().getLocation()) < minDistance ||
 					
 					// unusable items test
+					informationBase.getItemTypesInfo().get((UT2004ItemType) itemInfo.getItem().getType()) == null ||
 					informationBase.getItemTypesInfo().get((UT2004ItemType) itemInfo.getItem().getType())
 							.getStaticPriority() == 0
 					){

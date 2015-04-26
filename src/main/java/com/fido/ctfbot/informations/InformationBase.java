@@ -16,6 +16,7 @@
  */
 package com.fido.ctfbot.informations;
 
+import com.fido.ctfbot.AgentRunner;
 import com.fido.ctfbot.informations.players.FriendInfo;
 import com.fido.ctfbot.CTFChampion;
 import com.fido.ctfbot.Goal;
@@ -281,7 +282,8 @@ public final class InformationBase {
 			unidentifiedPlayersIds.add(id);
 		}
 		else{
-			if(players.getFriends().get(id) != null){
+																						// hotfix 
+			if(players.getFriends().get(id) != null && players.getFriends().get(id).getName().startsWith(AgentRunner.TEAM_NAME)){
 				FriendInfo friendInfo = new FriendInfo(this, player, players);
 				friends.put(id, friendInfo);
 				allPlayersInfo.put(id, friendInfo);
@@ -384,7 +386,7 @@ public final class InformationBase {
 	public synchronized void processMissingPlayers() {
 		
 		// the graeter than operator has to be here because of human player!
-		if(friends.size() >= TEAM_SIZE){
+		if(friends.size() == TEAM_SIZE){
 			UnrealId playerId;
 			for (final Iterator iterator = unidentifiedPlayersIds.iterator(); iterator.hasNext();) {
 				playerId = (UnrealId) iterator.next();
